@@ -1,0 +1,176 @@
+html {
+	background: rgb(22, 22, 22) none repeat scroll 0% 0%;
+}
+
+body {
+	font-family: Liberation Mono, Lucida Console, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+	font-size: medium;
+	color: #eeeeee;
+	line-height: 1.4em;
+}
+
+h1, h2, h3 {
+	letter-spacing: 1px;
+	color: #eeeeee;
+	margin-bottom: 0px;
+}
+
+h1 {
+	font-size: 125%;
+}
+
+h2 {
+	font-size: 105%;
+}
+
+h3 {
+	font-size: 100%;
+}
+
+.head {
+	overflow: hidden;
+	padding: 5px 5px 5px 5px;
+}
+
+.head a {
+	color: #eeeeee;
+	text-decoration: none;
+	line-height: 24px;
+	font-size: 100%;
+}
+
+.head a.logo {
+	font-size: 125%;
+	font-weight: bold;
+	color: #5294E2;
+}
+
+.head a.active {
+	background-color: #5294E2;
+	color: #eeeeee;
+}
+
+.head a:hover {
+	color: #5294E2;
+}
+
+.head-right {
+	float: right;
+	padding-right: 5px;
+}
+
+
+.content, .post {
+	background: rgb(28, 28, 28) none repeat scroll 0% 0%;
+	padding-top: 15px;
+	padding-left: 35px;
+	padding-right: 35px;
+	border-top: 1px dotted rgb(128,128,128);
+	border-bottom: 1px dotted rgb(128,128,128);
+}
+
+a {
+	overflow: hidden;
+	text-decoration: none;
+	color: #5294E2;
+}
+
+a:hover {
+	color: #eeeeee;
+}
+
+p.head, p.footer {
+	margin-right: 0.0em;
+}
+
+.post p {
+	line-height: 125%;
+	font-size: 95%;
+	text-align: justify;
+	padding-top: 1em;
+	letter-spacing: 0.3px;
+}
+
+p { 
+	letter-spacing: 1px;
+	color: #eeeeee;
+}
+
+ol, li {
+	line-height: 125%;
+	font-size: 95% !important;
+	text-align: justify;
+	letter-spacing: 0.5px;
+}
+
+ul {
+	padding-bottom: 2px;
+}
+
+li {
+	font-size: 16px;
+	color: #eeeeee;
+}
+
+
+.footer {
+	font-size: 80%;
+	color: #666666;
+	margin-top: 5px;
+}
+
+.image {
+	padding-top: 1em;
+}
+
+.shell {
+	font-family: Liberation Mono, Lucida Console, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+	text-align: justify;
+	border: 2px solid #727272;
+	background-color: #242424;
+	padding: 2px 3px 2px;
+	white-space: nowrap;
+}
+
+.shell code {
+	background-color: #242424;
+}
+
+code {
+	background-color: #323232;
+	border-radius: 3px;
+	padding: 0 3px;
+	font-size: 110%;
+}
+
+pre {
+	overflow: scroll;
+}
+
+table {
+	width: 50%;
+	border-spacing: 25px 0px;
+}
+
+table,
+td {
+	vertical-align: top;
+	white-space: nowrap
+}
+
+td {
+	padding: 1px 0.5em;
+}
+
+@media screen and (min-width: 1500px) {
+	body {
+		margin: auto;
+		width: 75em;
+	}
+}
+
+@media screen and (max-width: 1499px) {
+	body {
+		max-width: 100em;
+	}
+}
