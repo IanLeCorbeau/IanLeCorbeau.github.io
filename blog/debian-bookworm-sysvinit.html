@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+<h1>Debian Bookworm with Syvinit (Plus Bonus Init Script and Other Extras)</h1>
+<hr>
+
+<p>Almost a week after its release, I finally upgraded my daily driver to Bookworm.
+This is what I was waiting for in order to switch to sysvinit on my main machine.
+I'm already using it on all other Debian installs I have (laptop, multiple VMs),
+and for my daily driver, I just wanted to wait until I had to start over from
+scratch before switching.</p>
+
+<p>I already made a post[1] about how to switch to other init systems on Debian
+Bullseye, and figured I should do a new one for Bookworm. This time, however, I
+will only focus on sysvinit. Why? It's the one I use on Debian, meaning it's the
+one I can offer actually useful support for, in case someone encounters an issue
+or has any questions related to it.</p>
+
+<p>Now, by all means, if you still want to use either OpenRC or Runit, go for it (for
+OpenRC, just swap 'sysv-rc' with 'openrc').</p>
+
+<h2>Obligatory Disclaimers</h2>
+
+<hr>
+
+<p>Disclaimer #1: This isn't an anti-systemd post, so don't ask "what's wrong with
+systemd?". This is not a "systemd bad" post, but a "sysvinit good" one.</p>
+
+<p>Disclaimer #2: Why not just use Devuan[2]? Answer: this is about switching the init
+system on Debian, plain and simple. It wouldn't be much of a post if I just said
+"use Devuan". Now, if you want a 100% hassle-free, 'Debian-without-systemd'
+experience, then most definitely go with Devuan.</p>
+
+<h2>Pre-Switching Notes</h2>
+
+<hr>
+
+<p>First, if you're going to do this, the only surefire way of doing it without
+encountering a problem is by installing Debian with debootstrap[3], using the
+'minbase' variant. This works 100% of the time.</p>
+
+<p>I do not recommend switching a system that was already set up with Xorg/Wayland
+and a desktop environment and all.</p>
+
+<p>You can also do a netinstall, deselect everything at tasksel, and on first boot,
+do the switch. Do note, however, that this method is rather unpredictable. Sometimes
+it works, sometimes strange things happen, sometimes it just doesn't work at all.</p>
+
+<p>This is the method I used on my daily driver, and on the first try it failed and
+the system didn't boot. On the second try, I encountered the same error as on the
+first try but the system booted for some reason. Hence the unpredictable factor.</p>
+
+<h2>Switching</h2>
+
+<hr>
+
+<p>Now the meat and potatoes.</p>
+
+<p>If doing a deboostrap install, right before installing the kernel, simply do a:</p>
+
+<div class="shell">
+<pre><code>
+# apt install sysvinit-core sysv-rc orphan-sysvinit-scripts elogind libpam-elogind
+</code></pre>
+</div>
+
+<p>For a netinstall, the process is still simple, just split in stages:</p>
+
+<div class="shell">
+<pre><code>
+# apt install sysvinit-core sysv-rc orphan-sysvinit-scripts
+# reboot (and cross fingers)
+# apt install elogind libpam-elogind
+# reboot
+# profit
+</code></pre>
+</div>
+
+<p>As simple as that.</p>
+
+<p>Some people don't want elogind, but you most definitely should install it. For one,
+it allows running X rootless with xinit/startx, and two, it'll actually prevent
+systemd and all from being reinstalled, since it satisfies the logind dependency.</p>
+
+<h2>Post Switch</h2>
+
+<hr>
+
+<p>This is not necessary, but highly recommended.</p>
+
+<p>Because rsyslog is not installed by default on Bookworm, you should probably install
+it for system logging. If you want a proper unix-like system (and make sure to avoid
+installing a full fledged Mail Transfer Agent like exim4 if not needed) you should
+also install bsd-mailx and dma.</p>
+
+<p>bsd-mailx will provide the classic mail(1) command, whereas dma (Dragonfly Mail Agent)
+will provide a minimal MTA which doesn't have a daemon (no services running) and doesn't
+listen on any port (nor localhost) by default, a big plus for security. They both also
+work perfectly without any configuration needed. Just set mailname to your hostname and
+leave everything else blank when prompted while installing dma.</p>
+
+<div class="shell">
+<pre><code>
+# apt install rsyslog bsd-mailx dma
+</code></pre>
+</div>
+
+<h2>Bonus Init Script</h2>
+
+<hr>
+
+<p>If you want increased privacy, you can use Ragnarok's rm-machineid[4] init script. Details
+as to why you might want that are given in the link at the end.</p>
+
+<p>The actual script:
+<a href="https://raw.githubusercontent.com/RagnarokOS/src/master/etc/init.d/rm-machineid" target="_blank" rel="noopener noreferrer">
+	https://raw.githubusercontent.com/RagnarokOS/src/master/etc/init.d/rm-machineid</a>
+</p>
+
+<div class="shell">
+<pre><code>
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:             rm-machineid
+# Required-Start:
+# Required-Stop:    
+# Default-Start:
+# Default-stop:         0 6
+# Short-Description:    execute the rm-machineid script
+# Description:
+### END INIT INFO
+
+# /etc/machine-id and /var/lib/dbus/machine-id can be used to fingerprint a system.
+# Removing it when powering off or rebooting a machine will cause dbus to regenerate
+# it on boot, which at least provides some sort of mitigation.
+
+do_stop() {
+    echo "removing machine-id"
+
+    # on non-systemd systems, this file doesn't exist (normally)
+    if [ -f /etc/machine-id ]; then
+        rm -f /etc/machine-id
+    fi
+
+    rm -f /var/lib/dbus/machine-id
+}
+
+case "$1" in
+    start)  echo "invalid option" ;;
+    stop)   do_stop ;;
+    *)  do_stop ;;
+esac
+</code></pre>
+</div>
+
+<p>Either copy this in your favorite text editor, or download the script and put it in the
+<code>/etc/init.d/</code> directory.</p>
+
+<p>Afterwards, as root:</p>
+
+<div class="shell">
+<pre><code>
+# chmod 755 /etc/init.d/rm-machineid
+# update-rc.d rm-machineid defaults
+</code></pre>
+</div>
+
+<p>...and that is all.</p>
+
+<p>
+[1] <a href="https://lecorbeausvault.wordpress.com/2022/02/07/debian-switching-init-system-easily-openrc-sysvinit-runit/" target="_blank" rel="noopener noreferrer">
+	https://lecorbeausvault.wordpress.com/2022/02/07/debian-switching-init-system-easily-openrc-sysvinit-runit/</a> <br>
+[2] <a href="https://devuan.org" target="_blank" rel="noopener noreferrer">https://devuan.org</a> <br>
+[3] <a href="https://manpages.debian.org/bookworm/debootstrap/debootstrap.8.en.html" target="_blank" rel="noopener noreferrer">
+	https://manpages.debian.org/bookworm/debootstrap/debootstrap.8.en.html</a> <br>
+[4] <a href="https://ragnarokos.github.io/docs/machine-id.html" target="_blank" rel="noopener noreferrer">
+	https://ragnarokos.github.io/docs/machine-id.html</a></p>
+		</div>
+		<div class="footer">
+			&copy; 2023 Ian LeCorbeau
+		</div>
+	</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../rss/index.html">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+
+			<h1>Quickly Build a Custom Debian Live ISO with Live-Build</h1>
+
+			<hr>
+
+			<p>Debian’s rigid stability doesn’t appeal to everyone, but there is one thing clear: its
+			stability makes it the king of live USBs. Thanks to Debian’s own Live-Build package,
+			creating a custom iso (that can also be installed) is very easy.</p>
+
+			<p>First, this isn’t meant to be an in-depth guide. Debian’s ‘live-build’ tool has a ton
+			(and I do mean a TON) of options, and for more detailed options, I suggest you have a
+			look at the man pages related to it.</p>
+
+			<p>Second, the ideal is to do this in a virtual machine that is a perfect clone of the live
+			system you wish to build. This is optional, of course.</p>
+
+			<p>In any case, here are the steps to easily create your own custom iso.</p>
+
+			<p><em>Hint: commands preceded by a '#' must be run as root, <br>
+				while commands preceded by a '$' must be run as a regular user.</em></p>
+
+			<h2>Get the dependencies and Configure</h2>
+
+			<hr>
+
+			<p>First, install live-build, create a build directory and cd into it.</p>
+
+<div class="shell">
+<pre><code>
+    # apt install live-build
+    $ mkdir -p .build
+    cd .build
+</pre></code>
+</div>
+
+			<p>Next, create a config.</p>
+
+<div class="shell">
+<pre><code>
+    $ lb config -d bookworm --debian-installer live --debian-installer-distribution bookworm \  
+      --archive-areas "main non-free-firmware" --debootstrap-options "--variant=minbase"
+</pre></code>
+</div>
+
+			<p>This will generate the necessary files for a minimal Bullseye iso. There are much more
+config options available, and they are well documented in the lb_config manpage[1].</p>
+
+			<p>Example of various config options in use: <br>
+			<a href="https://github.com/RagnarokOS/iso/blob/main/Makefile#L27" target="_blank" rel="noopener noreferrer">
+				https://github.com/RagnarokOS/iso/blob/main/Makefile#L27</a></p>
+
+			<h2>Customizing the iso</h2>
+
+			<hr>
+
+			<p>Now is the time to customize the content of the iso. You can add your preferred window
+			manager or desktop environment, packages you need, as well as your dotfiles.</p>
+
+			<h3>Add packages</h3>
+
+			<p>Create a file named pkgs.list.chroot which should be saved to config/package-lists/. Add
+			the name of the packages you wish to have in the iso. This needs to be a list separated
+			by white-spaces, or each package on a new live, e.g.</p>
+
+<div class="shell">
+<pre><code>
+    xserver-xorg-core
+    xinit
+    xwallpaper
+    cwm
+    vim
+    tmux
+    vifm
+</pre></code>
+</div>
+
+			<p>Example pkgs.list.chroot file:<br>
+			<a href="https://github.com/IanLeCorbeau/debian-live-build/blob/main/config/package-lists/pkgs.list.chroot" target="_blank" rel="noopener noreferrer">
+			https://github.com/IanLeCorbeau/debian-live-build/blob/main/config/package-lists/pkgs.list.chroot</a></p>
+
+			<p>You can create multiple package lists for convenience if you plan on installing a lot.</p>
+
+			<p>Example setup for multiple package lists:<br>
+			<a href="https://github.com/RagnarokOS/iso/tree/main/config/package-lists" target="_blank" rel="noopener noreferrer">
+				https://github.com/RagnarokOS/iso/tree/main/config/package-lists</a></p>
+
+			<p>Make sure there are no typing error in the package names, or else the package will be
+			missing from the finished iso.</p>
+
+			<h3>Add your dotfiles</h3>
+
+			<p>Create a skeleton directory in config/includes.chroot_after_packages:</p>
+
+<div class="shell">
+<pre><code>
+    $ mkdir -p config/includes.chroot_after_packages/etc/skel
+</pre></code>
+</div>
+
+			<p>Then copy all your dotfiles over. The etc/skel directory should contain all files that
+			will be copied to the live user's home directory, so its structure is the same. This
+			config/includes.chroot_after_packages/ directory is, in fact, where all files you wish to
+			add to the iso should go. Treat it as the iso's file system.</p>
+
+			<p>Example skel directory: <br>
+			<a href="https://github.com/IanLeCorbeau/debian-live-build/tree/main/config/includes.chroot_after_packages/etc/skel" target="_blank" rel="noopener noreferrer">https://github.com/IanLeCorbeau/debian-live-build/tree/main/config/includes.chroot_after_packages/etc/skel</a>.</p>
+
+			<p>Example of a populated config/includes.chroot__after_packages directory: <br>
+			<a href="https://github.com/RagnarokOS/iso/tree/main/config/includes.chroot_after_packages" target="_blank" rel="noopener noreferrer">https://github.com/RagnarokOS/iso/tree/main/config/includes.chroot_after_packages</a>.</p>
+
+			<p>At this point, you could build the iso, or customize further using hooks.</p>
+
+			<h3>Hooks</h3>
+
+			<p>Hooks are just shell scripts where you run any command needed to tweak the live system.</p>
+
+			<p>For example</p>
+
+<div class="shell">
+<pre><code>
+    #!/bin/sh
+
+    set -e&nbsp;&nbsp;&nbsp;&nbsp;# use set -e so that build fails in case of error
+
+    sed -i '15 s/^# //' /etc/pam.d/su
+    addgroup --system wheel
+    touch /etc/doas.conf
+    echo "permit :wheel" > /etc/doas.conf
+</pre></code>
+</div>
+
+			<p>This would essentially enable the wheel group and configure doas on the live system.</p>
+
+			<p>All hook scripts should be saved in config/hooks/normal, and a name starting with a number and ending with .hook.chroot, e.g. <code>0001-instenv.hook.chroot</code>.</p>
+
+			<p>Example hook scripts: <br>
+			<a href="https://github.com/RagnarokOS/iso/blob/main/config/hooks/normal/0001-instenv.hook.chroot" target="_blank" rel="noopener noreferrer">https://github.com/RagnarokOS/iso/blob/main/config/hooks/normal/0001-instenv.hook.chroot</a> <br>
+			<a href="https://github.com/RagnarokOS/iso/blob/main/config/hooks/normal/0002-buildsrc.hook.chroot" target="_blank" rel="noopener noreferrer">https://github.com/RagnarokOS/iso/blob/main/config/hooks/normal/0002-buildsrc.hook.chroot</a></p>
+
+			<h3>Boot time hooks</h3>
+
+			<p>Because the live user is only created when the iso boots, there are certain customizations
+			that can't be done with normal hooks, e.g. changing the live user's password. Modifications
+			to the live user can be made by creating the <code>config/includes.chroot_after_packages/lib/live/config-hooks/</code>
+			directory, and placing hook scripts there.</p>
+
+			<p>Example scripts: <br>
+			<a href="https://github.com/RagnarokOS/iso/blob/main/config/includes.chroot_after_packages/lib/live/config-hooks/01ksh-default" target="_blank" rel="noopener noreferrer">https://github.com/RagnarokOS/iso/blob/main/config/includes.chroot_after_packages/lib/live/config-hooks/01ksh-default</a> <br>
+			<a href="https://github.com/RagnarokOS/iso/blob/main/config/includes.chroot_after_packages/lib/live/config-hooks/02sendmail.sh" target="_blank" rel="noopener noreferrer">https://github.com/RagnarokOS/iso/blob/main/config/includes.chroot_after_packages/lib/live/config-hooks/02sendmail.sh</a></p>
+
+			<h2>Building the iso</h2>
+
+			<hr>
+
+			<p>Once you're reasonably satisfied with your configuration, you can build the iso, by running:</p>
+
+<div class="shell">
+<pre><code>
+    # lb build
+</pre></code>
+</div>
+
+			<p>This may take a while depending on network speed and the amount of packages added. If the
+			build fails, don't sweat it. In my experience, live-build can be a bit, let's say, capricious. Other times, a simple typo or inadvertent misconfiguration can cause seemingly random
+			issues. Carefully read <code>lb build</code>'s output to investigate any problem. You could even save
+			the output to a log file using</p>
+
+<div class="shell">
+<pre><code>
+    # lb build 2>&1 | tee build-log.txt
+</pre></code>
+</div>
+
+			<p>It may take several tries before the build is both successful, and accurate. Patience is
+			most definitely required.</p>
+
+			<p>When the building process is done, the iso will be here in the <code>.build</code> directory, named
+			something along the lines of <code>live-image-amd64.hybrid.iso</code> (unless a name was provided
+			at config time).</p>
+
+			<h3>Subsequent rebuilds</h3>
+
+			<p>To rebuild the iso, run:</p>
+
+<div class="shell">
+<pre><code>
+    # lb clean
+    $ lb config
+    # lb build
+</pre></code>
+</div>
+
+<p>It is not necessary to run <code>lb config</code> with all options when simply doing a rebuild.</p>
+
+<p>If you want to restart from scratch, <code>lb build</code> has a number of options, such as
+<code>--all</code>, <code>--remove</code>, and <code>--purge</code> which can help, but in my experience, you're better off
+just backing up all directories/files you modified, removing the <code>.build</code> directory then
+re-run your full <code>lb config ...</code> command.</p>
+
+<h2>Backing up your config</h2>
+
+<hr>
+
+<p>I highly recommend backing up your <code>config/</code> directory in git for convenience, being careful
+not to track the files produced by the <code>lb config</code> command, besides these: <code>config/common</code>,
+<code>config/bootstrap</code>, <code>config/chroot</code> and <code>config/source</code>. </p>
+
+<p>Keeping these files around will allow you to rebuild without always reconfiguring. The
+<code>lb config</code> command will not overwrite these files unless an option is specified. For
+example, if you want to modify the name of the resulting iso:</p>
+
+<div class="shell">
+<pre><code>
+    $ lb config --image-name <i>customname-live</i>
+</pre></code>
+</div>
+
+<h2>Final thoughts</h2>
+
+<hr>
+
+<p>Building a custom live iso is relatively easy once everything is properly set up. Needless
+to say, though, patience is required. It does pay off down the line and once you successfully built your iso, rebuilds are trivial.</p>
+
+<p><em>Originally posted on January 9, 2021. <br>
+Updated on June 19, 2023.</em></p>
+
+<p>[1] <a href="https://manpages.debian.org/unstable/live-build/lb_config.1.en.html" target="_blank" rel="noopener noreferrer">https://manpages.debian.org/unstable/live-build/lb_config.1.en.html</a>  </p>
+
+		</div>
+		<div class="footer">
+			&copy; 2023 Ian LeCorbeau
+		</div>
+	</body>
+</html>

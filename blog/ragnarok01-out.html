@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+
+			<h1>Ragnarok 01 (dev): Live Iso and miniroot.tgz available now</h1>
+
+			<hr>
+
+			<p>
+			If you’ve read even just a few posts from this site then you’re obviously
+			not going to be shocked to learn that I’m a big tinkerer. Over the years
+			I have heavily customized the distro I call home, Debian, and found a way
+			to easily use this custom system anywhere, any time, without effort thanks
+			to a custom live iso.
+			</p>
+
+			<p>
+			Full disclosure, I’ve been wanting to create my own distro since about 2015.
+			Creating and building stuff is just part of who I am, and I’m a strong
+			believer in the old French adage “you are never served better than by
+			yourself”. So it’s only natural that this custom iso would eventually
+			turn into an actual distro.
+			</p>
+
+			<p>
+			If you’re looking for some justification as to “why yet another distro”, 
+			though, you’re not really going to get one. I do this because I want to, 
+			I enjoy doing it and the result is convenient for me. These are also the 
+			reasons why it’ll keep on existing whether I’m its sole user or not.
+			</p>
+
+			<h2>The Rundown</h2>
+
+			<hr>
+
+			<p>
+			First things first, it is highly recommended to read the relevant
+			documentation before trying out the iso.
+			</p>
+
+			<p>
+			[1] Project Goals:
+			<a href="https://ragnarokos.github.io/goals.html" target="_blank" rel="noopener noreferrer">
+				https://ragnarokos.github.io/goals.html</a> <br>
+			[2] Ragnarok-live Manual Page:
+			<a href="https://ragnarokos.github.io/manpages/ragnarok-live.8.html" target="_blank" rel="noopener noreferrer">
+				https://ragnarokos.github.io/manpages/ragnarok-live.8.html</a> <br>
+			[3] Development Notes:
+			<a href="https://ragnarokos.github.io/logs/logs.html" target="_blank" rel="noopener noreferrer">
+				https://ragnarokos.github.io/logs/logs.html</a> <br>
+			[4] Known bugs:
+			<a href="https://ragnarokos.github.io/logs/bugs.html" target="_blank" rel="noopener noreferrer">
+				https://ragnarokos.github.io/logs/bugs.html</a> <br>
+			[5] On regenerating the machine-id every boot:
+			<a href="https://ragnarokos.github.io/docs/machine-id.html" target="_blank" rel="noopener noreferrer">
+				https://ragnarokos.github.io/docs/machine-id.html</a>
+			</p>
+
+			<p>
+			I will gladly answer any question (especially since links 1 and 2
+			are still incomplete) provided they do not already have an answer
+			in the links above (yes, that is a polite way of saying RTFM).
+			</p>
+
+			<p>
+			There is still a lot of documentation that remain to be made however.
+			Luckily, I like writing docs. You can re-check this page every once
+			in a while if you want some updates (at least until the Ragnarok site is finished).
+			</p>
+
+			<h2>Development</h2>
+
+			<hr>
+
+			<p>
+			The iso and miniroot.tgz are for Ragnarok 01, codename “dev”.
+			This version is more a beta/alpha version for Ragnarok 02 (Stable)
+			than a full fledged development version. The development version
+			will be named -current, and will come to life once stable is released.
+			</p>
+
+			<p>
+			When will 02 be released? It technically could be released right
+			now but I will try to restrain myself. However, the reality is that
+			I have no way of knowing how many people will test it (or even be
+			interested in it, as I gather no data whatsoever) so I can only
+			count on my own experience to judge if its ready to be released.
+			One bonus is that I have three separate computers, each with their
+			own hardware and firmware needs, to test it on so at least there’s that.
+			</p>
+
+			<p>
+			While I can’t guarantee when stable will be released, and I can’t
+			be 100% sure that it will be free of any odd bugs once released,
+			I can still guarantee that since this is my daily driver, stable
+			will never include anything I’m not comfortable having installed
+			on my own system. I can also guarantee that everything included in
+			01 (minus hardened malloc – see note at the end of this post) has
+			been thoroughly tested and confirmed to be free of bugs.
+			</p>
+
+			<p>
+			Another certainty is that there is still a crap ton of work to be
+			done with the infrastructure, even if Ragnarok itself is perfectly
+			usable already.
+			</p>
+
+			<h2>Notes on the Live ISO and miniroot.tgz + Download</h2>
+
+			<hr>
+
+			<p>
+			The live iso for Ragnarok 01 serves as a means to easily test the
+			system in a way that is non-destructive. By “system”, I mean both
+			a full Ragnarok install and the iso itself. The live ISOs will be
+			first class citizens, as they are a perfect medium for systems that
+			strive to be as secure as possible by default, and as privacy-respecting
+			as possible (can’t get much better than a system that gets reset
+			to its OG state when powering off/rebooting).
+			</p>
+
+			<p>
+			Note that there is no installer for Ragnarok 01. This version isn’t
+			really meant to be installed. An installer and proper dist-upgrade
+			mechanism will be present starting with Ragnarok 02, though.
+			</p>
+
+			<p>
+			On the other hand, miniroot.tgz contains a Debian minbase, with
+			Ragnarok branding, ksh, hardened-malloc and signify included.
+			Its primary purpose is to provide small development chroots, e.g.
+			to build packages and whatnot.
+			</p>
+
+			<p>
+			You can visit
+			<a href="https://ragnarokos.github.io/download.html" target="_blank" rel="noopener noreferrer">https://ragnarokos.github.io/download.html</a>
+			to download either the live iso or miniroot (or both), and read
+			the instructions on verifying their signature, among other things.
+			The policy is to rebuild the iso when an update which requires a 
+			reboot occurs, but for 01, you can expect much more frequent rebuilds,
+			so it’s not a bad idea to check the download page/upload date every
+			once in a while if you want to always use the latest iso.
+			</p>
+
+			<p>
+			Missing from the download page are base.tgz, x11.tgz and boot.tgz.
+			More info will be provided once they’re ready.
+			</p>
+
+			<h2>Contributing</h2>
+
+
+			<p>
+Contributions are always welcome.
+			</p>
+
+			<p>
+			The best way to contribute currently is to use the iso and report
+			any bugs. There are various repositories where relevant issues can
+			be opened, but for the sake of simplicity, any issue can be reported
+			in the iso’s issue tracker here:
+			<a href="https://github.com/RagnarokOS/iso/issues" target="_blank" rel="noopener noreferrer">https://github.com/RagnarokOS/iso/issues</a>.
+			</p>
+
+			<p>
+			If you’re skilled with apparmor you can always look into
+			creating/sending profiles for base programs which may need them.
+			</p>
+
+			<p>
+			If you’re skilled in C and have an interest in the Kernel’s Landlock
+			API, we may get along real fine.
+			</p>
+
+			<p>
+			Submitting patches for anything else, or throwing ideas at me is
+			also more than welcome. You can also send a small donation in order
+			to help with Ragnarok’s future maintenance costs.
+			</p>
+
+			<p>
+			On the subject of contributing, one thing needs to be made clear
+			immediately (and this will be added to the Ragnarok site as soon 
+			as possible): contributions and ideas will be judged solely on
+			their technical merit. The contributors and their opinions on
+			subjects unrelated to Ragnarok development are of no consequence
+			whatsoever. I’m not here to babysit thin-skinned people. On that 
+			same note, Ragnarok does not, and will never, have a code of conduct.
+			</p>
+
+			<h2>Note on hardened_malloc</h2>
+
+			<hr>
+
+			<p>
+			Ragnarok 02 will differ from 01 in only one way: hardened_malloc
+			will still be installed, but won’t be enabled by default. This is
+			because it hasn’t been tested in enough situations and enough workload
+			types to know what sort of impact it has. It will be enabled in
+			Stable’s live iso, and in -current however, and it’s still recommended
+			to enable it even on Stable.
+			</p>
+		</div>
+
+		<div class="footer">
+			&copy; 2023 Ian LeCorbeau
+		</div>
+	</body>
+</html>

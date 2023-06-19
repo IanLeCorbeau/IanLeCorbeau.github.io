@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../rss/index.html">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+<h1>Debian Debootstrap Install (AKA Installing Debian "the Arch way")</h1>
+
+<hr>
+
+<p>I’m not going to start by listing a number of reasons why you might want to do
+this. Chances are, if you found this guide it’s because you wanted to try it out,
+and have your reasons. If you don’t have any, then perhaps just the fun of it and
+the learning experience is more than valid enough.</p>
+
+<p>I do want to point out that if you’re doing this expecting something even more minimal
+than a standard netinstall with nothing selected at tasksel (which is already minimal
+enough), you may or may not be disappointed. We’ll be using the –variant=minbase option,
+which will omit some packages, but chances are you’ll end up installing some of them
+later. Regardless, it’s still worth doing, so let’s get to it right away.</p>
+
+<h2>Pre Installation Notes</h2>
+
+<hr>
+
+<ul>
+<li><p>It’s not a bad idea to do this in a virtual machine or an old computer first.  </p></li>
+<li><p>No matter what you do, make damn sure you’re formatting the right drive.  </p></li>
+<li><p>You can do this from a pre-existing install, but my recommendation is to use a live
+iso. I use my own custom iso[1], but any Debian live iso will do.  </p></li>
+<li><p>Do yourself a favor before starting, and either use tmux or drop to a tty. Reason:
+some terminals might misbehave when chrooted in the bootstrapped environment due to
+some missing packages. Using tmux or a TTY is quicker and simpler than hunting down 
+those missing packages which will inevitably get installed later when you’re finished 
+with this process.</p></li>
+</ul>
+
+<h2>Switching to the root account</h2>
+
+<hr>
+
+<p>It’s a lot more convenient to switch to the root account. That way, no need to constantly
+type sudo. If the root account is locked, just typing <code>sudo su</code> or <code>sudo su -</code> will do.</p>
+
+<h2>Get the dependencies</h2>
+
+<hr>
+
+<p>We don’t need much dependencies. Only debootstrap and the Arch install scripts for
+convenience.</p>
+
+<div class="shell">
+<pre><code>
+    # apt update && apt install debootstrap arch-install-scripts -y
+</pre></code>
+</div>
+
+<h2>Formatting and partitioning</h2>
+
+<hr>
+
+<p>Format your drive. I’m not going to go into detail on that one, because there’s a lot of
+different tools that does the job (fdisk, cfdisk, parted, etc) and which one is the best 
+is merely a question of preference. I use cfdisk just because it’s what I’m used to.
+This guide, however, assumes you’re going to use separate boot (if installing on EFI
+systems), swap, root and home partitions.</p>
+
+<p>Note: in KVM/QEMU, it’ll be vdX, rather than sdX.</p>
+
+<p>Once the disk is formatted, make the partitions and mount them.</p>
+
+<ul>
+<li>On EFI systems:</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # mkfs.fat -F 32 /dev/sdX1
+    # mkswap /dev/sdX2
+    # swapon /dev/sdX2
+    # mkfs.ext4 /dev/sdX3
+    # mkfs.ext4 /dev/sdX4
+
+    # mount /dev/sdX3 /mnt
+    # mkdir -p /mnt/{boot,home}
+    # mount /dev/sdX1 /boot/efi
+    # mount /dev/sdX4 /mnt/home
+</pre></code>
+</div>
+
+<ul>
+<li>On legacy/bios systems:</li>
+</ul>
+
+<div class="shell">
+ <pre><code>
+    # mkswap /dev/sdX1
+    # swapon /dev/sdX1
+    # mkfs.ext4 /dev/sdX2
+    # mkfs.ext4 /dev/sdX3
+
+    # mount /dev/sdX2 /mnt
+    # mkdir -p /mnt/home
+    # mount /dev/sdX3 /mnt/home
+</pre></code>
+</div>
+
+<h2>Deboostrap</h2>
+
+<hr>
+
+<p>With the disk partitioned and partitions mounted, we now run the debootstrap command. We
+will need a cli text editor in the chroot to modify some files, so we include one already.
+I use vim, but choose whatever floats your boat.</p>
+
+<div class="shell">
+<pre><code>
+    # /usr/sbin/debootstrap --variant=minbase --include=vim bookworm \
+    # /mnt http://deb.debian.org/debian/
+</pre></code>
+</div>
+
+<h2>Generate the fstab file</h2>
+
+<hr>
+
+<p>We need to create the fstab file. This is where the Arch install scripts come in handy.
+We’ll be using UUIDs with the -U option, rather than disk labels.</p>
+
+<div class="shell">
+<pre><code>
+    # genfstab -U /mnt >> /mnt/etc/fstab
+</pre></code>
+</div>
+
+<h2>Before chrooting</h2>
+
+<hr>
+
+<p>Before we chroot, it's not a bad idea to properly set up apt's sources.list file. You can
+either copy the one from the iso to <code>/mnt/etc/apt/</code>, as long as it has all the proper sections,
+or, create the file with your preferred cli text editor. A good <code>/etc/apt/sources.list</code>
+file for Debian Bookworm:</p>
+
+<div class="shell">
+<pre><code>
+    deb http://deb.debian.org/debian/ bookworm main non-free-firmware
+    deb-src http://deb.debian.org/debian/ bookworm main non-free-firmware
+
+    deb http://security.debian.org/debian-security bookworm-security main non-free-firmware
+    deb-src http://security.debian.org/debian-security bookworm-security main non-free-firmware
+
+    deb http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
+    deb-src http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
+</pre></code>
+</div>
+
+<p>If you’re planning on using ifupdown as your networking tool, and you’re doing this from
+a system which uses it, copy the interfaces file to the chroot.</p>
+
+<div class="shell">
+<pre><code>
+    # cp /etc/network/interfaces /mnt/etc/network/interfaces
+</pre></code>
+</div>
+
+<p>Do the same for the <code>/etc/network/interfaces.d/</code> directory if it contains any files.</p>
+
+<h2>Chroot</h2>
+
+<hr>
+
+<p>Now is the time to chroot into the deboostrapped system</p>
+
+<div class="shell">
+<pre><code>
+    # arch-chroot /mnt
+</pre></code>
+</div>
+
+<p>Then, run <code>apt update</code> for good measure.</p>
+
+<h2>Installing init and the kernel</h2>
+
+<hr>
+
+<p>We need a kernel and init system. This could be done later but I prefer getting it out of
+the way first.</p>
+
+<ul>
+<li>For systemd:</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # apt instal systemd systemd-sysv libpam-systemd libsystemd0
+</pre></code>
+</div>
+
+<ul>
+<li>For sysvinit:</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # apt install sysvinit-core sysv-rc orphan-sysvinit-scripts elogind libpam-elogind
+</pre></code>
+</div>
+
+<ul>
+<li>Install the kernel:</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # apt install linux-image-amd64
+</pre></code>
+</div>
+
+<p>Swap <code>amd64</code> for another architecture if you need.</p>
+
+<h2>Set Timezone</h2>
+
+<hr>
+
+<p>Run the follwing command and go through the steps</p>
+
+<div class="shell">
+<pre><code>
+    # dpkg-reconfigure tzdata
+</pre></code>
+</div>
+
+<h2>Networking</h2>
+
+<hr>
+
+<p>This step depends on which networking tool you plan on using. I’ll use ifupdown (I’m a
+simple man, so it’s what I use) as an example.</p>
+
+<ul>
+<li>Using ifupdown (remove wpasupplicant if wifi is not needed):</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # apt install ifupdown wpasupplicant
+</pre></code>
+</div>
+
+<p>Next, if you couldn't copy <code>/etc/network/interfaces</code> to the chroot because it was missing,
+you will need to create the proper file. You can refer to my ifupdown guide[2] on how to
+configure /etc/network/interfaces for either wired or wireless networks, or both, in
+detail, but for now, here’s a quick way to setup a basic ethernet connection with a
+dynamic IP address.</p>
+
+<p>Find your interface's name with the <code>find /sys/class/net</code> command. Wired networks usually
+start with <code>enp</code> (eg. <code>enp1s0</code>). Then create <code>/etc/network/interfaces</code>, and add:</p>
+
+<div class="shell">
+<pre><code>
+    source /etc/network/interfaces.d/*
+
+    # The loopback <i>network-interface</i>
+    auto lo
+    iface lo inet loopback
+
+    # The primary <i>network-interface</i>
+    allow-hotplug enp1s0
+    iface enp1s0 inet dhcp
+</pre></code>
+</div>
+
+<p>Subsitute <code>network-interface</code> with your interface's name.</p>
+
+<h2>Hostname and hosts file</h2>
+
+<hr>
+
+<p>Choose a hostname for your system and add it to <code>/etc/hostname</code>:</p>
+
+<div class="shell">
+<pre><code>
+    # echo "<i>yourhostname</i>" > /etc/hostname
+</pre></code>
+</div>
+
+<p>Now, fill <code>/etc/hosts</code> with the following:</p>
+
+<div class="shell">
+<pre><code>
+    127.0.0.1   localhost
+    127.0.1.1   <i>yourhostname</i>
+
+    # IPv6
+    ::1         localhost ip6-localhost ip6-loopback
+    ff02::1     ip6-allnodes
+    ff02::2     ip6-allrouters
+</pre></code>
+</div>
+
+<h2>Locales and keyboard configuration</h2>
+
+<hr>
+
+<ul>
+<li>Install the locales package, then configure</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # apt install locales
+    # dpkg-reconfigure locales
+</pre></code>
+</div>
+
+<ul>
+<li>Configure the keyboard if you're not going to use the default 'us' keymap:</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # apt install console-setup
+    # dpkg-reconfigure keyboard-configuration
+</pre></code>
+</div>
+
+<p>You may not want to run dpkg-reconfigure keyboard-configuration. I find it more trouble
+than it’s worth and it seems to me like it is not required, though it’s mentioned in most
+guides.</p>
+
+<p>Certain changes to the keymap will only take effect once rebooted into the new install.</p>
+
+<h2>Users, passwords and authentication</h2>
+
+<hr>
+
+<ul>
+<li>Start by creating a password for the root account. You can lock the account later if you
+don't plan on using it with the <code>passwd -l root</code> command.</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # passwd
+</pre></code>
+</div>
+
+<ul>
+<li>Setting up your default user:</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # useradd -m username
+    # passwd username
+</pre></code>
+</div>
+
+<p>Add the user to necessary groups, and give it the proper interactive shell. Debian uses
+bash as its default interactive shell, but you can choose whatever you like.</p>
+
+<div class="shell">
+<pre><code>
+    # usermod -aG cdrom,floppy,audio,dip,video,plugdev,netdev username
+    # usermod -s /bin/bash username
+</pre></code>
+</div>
+
+<ul>
+<li>Next, you need to decide if you want sudo or doas in order to elevate your user’s
+privileges for updates, etc… This is your choice, though I personally prefer doas.</li>
+</ul>
+
+<p>For doas:</p>
+
+<div class="shell">
+<pre><code>
+    # apt install opendoas
+    # echo "permit <i>username</i>" > /etc/doas.conf
+</pre></code>
+</div>
+
+<p>For sudo:</p>
+
+<div class="shell">
+<pre><code>
+    # apt install sudo
+    # usermod -aG sudo <i>username</i>
+</pre></code>
+</div>
+
+<p>Debian provides a pre-configured sudoers file, and you probably don’t need to change
+anything, but it’s wise to verify that the line under “allow members of group sudo …”
+is not commented out with the <code>cat /etc/sudoers</code> command.</p>
+
+<p>Look at the output, and if the line is commented out, use the <code>visudo</code> command and
+uncomment it.</p>
+
+<h2>Setting up the bootloader</h2>
+
+<hr>
+
+<p>Here, grub is used. For other bootloaders, see their own documentation.</p>
+
+<ul>
+<li>For EFI systems</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # apt install grub-efi-amd64
+    # grub-install --target=x86_64-efi --efi-directory=/boot/efi
+    # update-grub
+</pre></code>
+</div>
+
+<ul>
+<li>For bios/legacy systems</li>
+</ul>
+
+<div class="shell">
+<pre><code>
+    # apt install grub-pc
+    # grub-install /dev/sdX
+    # update-grub
+</pre></code>
+</div>
+
+<h2>Finalizing</h2>
+
+<hr>
+
+<ol>
+<li>Run <code>apt clean</code> for good measure.</li>
+<li>Remove resolv.conf so it gets recreated at boot: <code>rm /etc/resolv.conf</code></li>
+<li>Exit the chroot with the <code>exit</code> command.</li>
+<li>Unmount the filesystems with <code>umount</code> just to be extra safe. Hint: unmount the
+devices mounted to /boot/efi and /home first before running <code>umount /dev/sdX</code>.</li>
+</ol>
+
+<p>That's it. Reboot and enjoy.</p>
+
+			<p>[1] <a href="https://github.com/RagnarokOS/iso/releases" target="_blank" rel="noopener noreferrer">
+				https://github.com/RagnarokOS/iso/releases</a> <br>
+			[2] <a href="https://lecorbeausvault.wordpress.com/2021/09/09/debian-using-ifup-ifdown-for-network-connections/" target="_blank" rel="noopener noreferrer">
+				https://lecorbeausvault.wordpress.com/2021/09/09/debian-using-ifup-ifdown-for-network-connections/</a>
+			</p>
+
+			<p><i>Originally posted on October 7, 2021.<br>
+				Updated on June 18, 2023.</i></p>
+		</div>
+		<div class="footer">
+			&copy; 2023 Ian LeCorbeau
+		</div>
+	</body>
+</html>
