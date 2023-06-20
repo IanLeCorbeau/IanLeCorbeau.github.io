@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+
+			<h1>cwmbar: Relatively Simple Status Bar for cwm</h1>
+
+			<hr>
+
+			<p>I did a post last year discussing OpenBSD's Calm Window Manager, and
+			always meant to follow it up with a post about my status bar setup.
+			I was too busy to finish the bar, so in the mean time I was just using
+			polybar, but I always wanted to take my dwm status bar script[1] and
+			adapt it to cwm.</p>
+
+			<p>Either way, since cwm is included in my current project's live iso[2],
+			I had no choice but to finish it (not that I'm complaining, any excuse
+			is good to write shell scripts) so that it could be included. </p>
+
+			<p>This is slightly less simple than statubar.sh, simply because unlike dwm,
+			cwm doesn't come with any built-in bar that shows window groups and window
+			title by default. Luckily there are plenty of tools that do the job.</p>
+
+			<p><em>Note: a version specific to OpenBSD will be made, since ram usage, cpuload,
+				network state and volume level all require different commands/scripting.
+				Everything else in this bar version will work without a hitch, though.</em></p>
+
+			<h2>Script and Screenshot</h2>
+
+			<hr>
+
+			<p>Script:
+			<a href="https://raw.githubusercontent.com/IanLeCorbeau/dotfiles/master/.local/bin/cwmbar">https://raw.githubusercontent.com/IanLeCorbeau/dotfiles/master/.local/bin/cwmbar</a></p>
+
+			<p><img src="../img/cwmbar-screenshot.png" alt="screenshot" class="image"></p>
+
+			<h2>Dependencies</h2>
+
+			<hr>
+
+			<ul>
+				<li>Lemonbar to actually draw the status on screen.</li>
+				<li>xprop(1) to display the window group we're in.</li>
+				<li>wmctrl to display the window number.</li>
+				<li>wmutils' core[3] to display the window name.</li>
+				<li>Standard unix utilities (grep, sed, awk, etc).</li>
+				<li>Spleen font[4]</li>
+			</ul>
+
+			<p>All this makes it a lot less simple than statusbar.sh (and the scripting ain't
+			pretty to look at, if I can say so myself), but it does what it's supposed to.</p>
+
+			<h2>Extra Notes</h2>
+
+			<hr>
+
+			<p>The <code>group()</code> function allows to set names for each window group if, like me, you
+			want to dedicate each group for a specific task.</p>
+
+			<p>The <code>winnum()</code> function displays the total number of windows. This is there since
+			inactive and/or non-focused groups are not displayed in the bar, and it can be easy
+			to forget that other groups may have opened windows. I would have preferred using the wmutils' lsw
+			tool, but it's default option only lists mapped windows in the current group, and its
+			option to list all windows will also list things like dunst and xcompmgr, which isn't
+			desired.</p>
+
+			<p>The wmutils tools are very useful in not only finding the window name, but also
+			in setting up the width and position of the bar automatically, based on the
+			properties of the root window. As a bonus, its tools can be used to extend cwm's
+			functionality through scripts and keybindings. There ain't nothing better than
+			that.</p>
+
+			<p>The <code>volume_alsa()</code> function can be replaced with <code>volume-pa()</code> if using pulseaudio.
+			Since I use pure alsa and I'm not familiar with pipewire, I can't create a function
+			for it. In other words "patch welcomed".</p>
+
+			<p>I chose the Spleen font because it looks great here, but naturally, it can be
+			changed like everything else.</p>
+
+			<h2>Bugs</h2>
+
+			<hr>
+
+			<p>There was a bug where the window name would disappear after opening a dialog window
+			or dmenu, which was fixed by getting the id of the last window in the stack, rather
+			than the focused window. This ensures that even when focus is lost, the name of the
+			window that should be focused will be displayed in the bar.</p>
+
+			<p>I have still encountered this bug once or twice afterwards, but under different
+			circumstances. Which circumstances? Can't even tell as I failed to reproduce the issue.
+			Regardless, it had to be pointed out.</p>
+
+			<p>If you encounter any bug, you can contact me via email or open an issue in my dotfiles[5]
+			repository on github.</p>
+
+			<p>[1] statusbar.sh
+			<a href="https://github.com/IanLeCorbeau/dotfiles/blob/master/.local/bin/statusbar.sh">https://github.com/IanLeCorbeau/dotfiles/blob/master/.local/bin/statusbar.sh</a> <br>
+			[2] Ragnarok
+			<a href="https://github.com/RagnarokOS/iso/releases">https://github.com/RagnarokOS/iso/releases</a> <br>
+			[3] wmutils' core:
+			<a href="https://github.com/wmutils/core">https://github.com/wmutils/core</a> <br>
+			[4] Spleen font:
+			<a href="https://github.com/fcambus/spleen">https://github.com/fcambus/spleen</a> <br>
+			[5] dotfiles:
+			<a href="https://github.com/IanLeCorbeau/dotfiles">https://github.com/IanLeCorbeau/dotfiles</a></p>
+
+		</div>
+		<div class="footer">
+			&copy; 2023 Ian LeCorbeau
+		</div>
+	</body>
+</html>
