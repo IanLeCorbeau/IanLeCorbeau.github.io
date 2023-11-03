@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+
+			<h1>Debian: Install More Recent LLVM/Clang Toolchain</h1>
+			<hr>
+
+			<p>That is, without creating a Frankendebian.</p>
+
+			<p>First, some important context: in wanting to compile some programs and
+			the Linux kernel[1] with Clang's Control Flow Integrity[2] feature, I was
+			made aware that one would need Clang 16 or higher, which means that the
+			versions in the official Debian repo (14 and 15) weren't going to work.
+			Programs would segfault, while the option wouldn't even show in the menu
+			when configuring the kernel (despite <code>make oldconfig</code> asking if it should
+			be enabled).</p>
+
+			<p>Since I like testing security features, switching to version 16 right away
+			was a no breainer. If none of this is a concern to you, then the versions
+			in the official Debian repo will serve you just as well.</p>
+
+			<h2>Enter apt.llvm.org</h2>
+			<hr>
+
+			<p>Although it's normally my preferred option, I wasn't willing to wait hours
+			for a new LLVM version to compile on that day (I'm not the most patient man
+			on earth), but luckily, the LLVM project maintains their own Debian (and
+			Ubuntu) repos for that purpose.</p>
+
+			<p>Here, version 16 will be installed as it's the one identified as "stable"
+			on the apt.llvm.org website, but version 17 (or any future ones) can be
+			installed instead by swapping all instances of 16 with the desired number
+			in the steps below.</p>
+
+			<h2>Adding the repository</h2>
+			<hr>
+
+			<p>First, as the root user, create a deb822-style sources file in <code>/etc/apt/sources.list.d/</code>
+			called <code>llvm.sources</code>:</p>
+
+			<p><a href="https://raw.githubusercontent.com/RagnarokOS/src/master/etc/apt/sources.list.d/llvm.sources">https://raw.githubusercontent.com/RagnarokOS/src/master/etc/apt/sources.list.d/llvm.sources</a></p>
+
+			<div class="shell">
+				<pre><code>
+Types: deb deb-src
+URIs: http://apt.llvm.org/bookworm/
+Suites: llvm-toolchain-bookworm-16
+Components: main
+Signed-by: /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+			</pre></code>
+			</div>
+
+			<p>Next, download (as a non-root user) the project's gpg key with curl or wget:</p>
+
+			<div class="shell">
+				<pre><code>
+$ wget https://apt.llvm.org/llvm-snapshot.gpg.key
+
+- or - 
+
+$ curl -OL https://apt.llvm.org/llvm-snapshot.gpg.key
+			</pre></code>
+			</div>
+
+			<p>Then, as root, create the /etc/apt/trusted.gpg.d/apt.llvm.org.asc file:</p>
+
+			<div class="shell">
+				<pre><code>
+# cat llvm-snapshot.gpg.key > /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+			</pre></code>
+			</div>
+
+			<p>Afterwards, simply run apt update. If everything was properly set up, no
+			errors will be reported.</p>
+
+			<p>And now, brace yourself.</p>
+
+			<h2>Installing the packages</h2>
+			<hr>
+
+			<p>As root:</p>
+
+			<div class="shell">
+				<pre><code>
+# apt-get install -y libllvm16 llvm-16 llvm-16-dev llvm-16-runtime \
+    clang-16 clang-tools-16 libclang-common-16-dev libclang-16-dev \
+    libclang1-16 clang-format-16 python3-clang-16 clang-tidy-16 \
+    libclang-rt-16-dev libpolly-16-dev libfuzzer-16-dev lldb-16 \
+    lld-16 libc++-16-dev libc++abi-16-dev libomp-16-dev \
+    libunwind-16-dev libmlir-16-dev flang-16
+    		</pre></code>
+    		</div>
+
+			<p>Note that this does not install absolutely everything, but close to it.
+			So far, I have not come across a situation where something was missing,
+			but if you do, refer to the "install" sections at apt.llvm.org.</p>
+
+			<h2>Proper set-up with update-alternatives</h2>
+			<hr>
+
+			<p>This step is required in order to build the Linux kernel with the full
+			toolchain properly, and mandatory if you want to use LLVM/Clang as the
+			default toolchain.</p>
+
+<div class="shell">
+<pre><code>
+# export VERSION="16"
+
+# update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-"${VERSION}" 100 \
+	--slave /usr/bin/llvm-ar llvm-ar /usr/bin/llvm-ar-"${VERSION}" \
+	--slave /usr/bin/llvm-as llvm-as /usr/bin/llvm-as-"${VERSION}" \
+	--slave /usr/bin/llvm-bcanalyzer llvm-bcanalyzer /usr/bin/llvm-bcanalyzer-"${VERSION}" \
+	--slave /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-"${VERSION}" \
+	--slave /usr/bin/llvm-diff llvm-diff /usr/bin/llvm-diff-"${VERSION}" \
+	--slave /usr/bin/llvm-dis llvm-dis /usr/bin/llvm-dis-"${VERSION}" \
+	--slave /usr/bin/llvm-dwarfdump llvm-dwarfdump /usr/bin/llvm-dwarfdump-"${VERSION}" \
+	--slave /usr/bin/llvm-extract llvm-extract /usr/bin/llvm-extract-"${VERSION}" \
+	--slave /usr/bin/llvm-link llvm-link /usr/bin/llvm-link-"${VERSION}" \
+	--slave /usr/bin/llvm-mc llvm-mc /usr/bin/llvm-mc-"${VERSION}" \
+	--slave /usr/bin/llvm-nm llvm-nm /usr/bin/llvm-nm-"${VERSION}" \
+	--slave /usr/bin/llvm-objdump llvm-objdump /usr/bin/llvm-objdump-"${VERSION}" \
+	--slave /usr/bin/llvm-ranlib llvm-ranlib /usr/bin/llvm-ranlib-"${VERSION}" \
+	--slave /usr/bin/llvm-readobj llvm-readobj /usr/bin/llvm-readobj-"${VERSION}" \
+	--slave /usr/bin/llvm-rtdyld llvm-rtdyld /usr/bin/llvm-rtdyld-"${VERSION}" \
+	--slave /usr/bin/llvm-size llvm-size /usr/bin/llvm-size-"${VERSION}" \
+	--slave /usr/bin/llvm-stress llvm-stress /usr/bin/llvm-stress-"${VERSION}" \
+	--slave /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-"${VERSION}" \
+	--slave /usr/bin/llvm-tblgen llvm-tblgen /usr/bin/llvm-tblgen-"${VERSION}" \
+	--slave /usr/bin/llvm-objcopy llvm-objcopy /usr/bin/llvm-objcopy-"${VERSION}" \
+	--slave /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-"${VERSION}"
+
+    # update-alternatives --install /usr/bin/clang clang /usr/bin/clang-"${VERSION}" 100 \
+	--slave /usr/bin/clang++ clang++ /usr/bin/clang++-"${VERSION}" \
+	--slave /usr/bin/asan_symbolize asan_symbolize /usr/bin/asan_symbolize-"${VERSION}" \
+	--slave /usr/bin/clang-cpp clang-cpp /usr/bin/clang-cpp-"${VERSION}" \
+	--slave /usr/bin/clang-cl clang-cl /usr/bin/clang-cl-"${VERSION}" \
+	--slave /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-"${VERSION}" \
+	--slave /usr/bin/lld lld /usr/bin/lld-"${VERSION}" \
+	--slave /usr/bin/lld-link lld-link /usr/bin/lld-link-"${VERSION}" \
+	--slave /usr/bin/clang-format clang-format /usr/bin/clang-format-"${VERSION}" \
+	--slave /usr/bin/clang-format-diff clang-format-diff /usr/bin/clang-format-diff-"${VERSION}" \
+	--slave /usr/bin/clang-include-fixer clang-include-fixer /usr/bin/clang-include-fixer-"${VERSION}" \
+	--slave /usr/bin/clang-offload-bundler clang-offload-bundler /usr/bin/clang-offload-bundler-"${VERSION}" \
+	--slave /usr/bin/clang-query clang-query /usr/bin/clang-query-"${VERSION}" \
+	--slave /usr/bin/clang-rename clang-rename /usr/bin/clang-rename-"${VERSION}" \
+	--slave /usr/bin/clang-reorder-fields clang-reorder-fields /usr/bin/clang-reorder-fields-"${VERSION}" \
+	--slave /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-"${VERSION}" \
+	--slave /usr/bin/lldb lldb /usr/bin/lldb-"${VERSION}" \
+	--slave /usr/bin/lldb-server lldb-server /usr/bin/lldb-server-"${VERSION}"
+			</pre></code>
+			</div>
+
+			<h2>Using LLVM/Clang as the default toolchain (Optional)</h2>
+			<hr>
+
+			<p>If you wish to set LLVM/Clang as your default toolchain, use update-alternatives
+			to set the proper symlinks.</p>
+
+			<p>Do so at your own risks, and note that programs which use automake/autotools (e.g.
+			coreutils, e2fsprogs, util-linux) will still set CC as gcc (and it'll work just
+			fine) so you'll need to specify that <code>CC=clang</code> when running <code>./configure</code>.</p>
+
+			<div class="shell">
+				<pre><code>
+# update-alternatives --install /usr/bin/cc cc /usr/bin/clang-"${VERSION}" 100
+# update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld-"${VERSION}" 100
+# update-alternatives --install /usr/bin/ar ar /usr/bin/llvm-ar-"${VERSION}" 100
+# update-alternatives --install /usr/bin/ranlib ranlib /usr/bin/llvm-ranlib-"${VERSION}" 100
+# update-alternatives --install /usr/bin/objcopy objcopy /usr/bin/llvm-objcopy-"${VERSION}" 100
+# update-alternatives --install /usr/bin/strip strip /usr/bin/llvm-strip-"${VERSION}" 100
+			</pre></code>
+			</div>
+
+			<h2>Scripting the process</h2>
+			<hr>
+
+			<p>If you would like to do the whole process (minus the repo setup) in one go,
+			you can use this simple script, after making sure it doesn't do anything
+			malicious, of course.</p>
+
+			<p><a href="https://github.com/IanLeCorbeau/dotfiles/blob/master/.local/bin/llvm-default.sh">https://github.com/IanLeCorbeau/dotfiles/blob/master/.local/bin/llvm-default.sh</a></p>
+
+			<h2>Links</h2>
+			<hr>
+
+			<p>[1] <a href="https://clang.llvm.org/docs/ControlFlowIntegrity.html">https://clang.llvm.org/docs/ControlFlowIntegrity.html</a><br>
+			[2] <a href="https://github.com/RagnarokOS/kernel-build/releases">https://github.com/RagnarokOS/kernel-build/releases</a></p>
+
+		</div>
+		<div class="footer">
+			&copy; 2023 Ian LeCorbeau
+		</div>
+	</body>
+</html>

@@ -148,7 +148,7 @@ code {
 pre {
 	overflow: scroll;
 	margin-top: -1em;
-	white-space: pre-line;
+	/* white-space: pre-line; */
 }
 
 table {
