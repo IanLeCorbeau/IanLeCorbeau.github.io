@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+			<h1>A Hardened, Clang-built Linux Kernel for Debian</h1>
+			<hr>
+
+			<p>For the most part, "Debian user" and "likes living on the edge" don't
+			go hand in hand, but if you're one of those who enjoy stable systems,
+			yet still like to experiment and test new things, Ragnarok's build
+			of the Linux kernel is available for testing.</p>
+
+			<p>This version of the Kernel is built with the full LLVM/Clang toolchain
+			using Debian's linux-source package (so it's the same version used in
+			Debian stable). It's also compiled with ThinLTO[1] and enables clang's
+			Control Flow Integrity[2], which is "designed to abort the program upon
+			detecting certain forms of undefined behavior that can potentially allow
+			attackers to subvert the program’s control flow".</p>
+
+			<p>If this is the sort of thing that gets your juices flowing, you can get
+			the kernel and its associated headers and libc-dev packages here:</p>
+
+			<p><a href="https://github.com/RagnarokOS/kernel-build/releases">https://github.com/RagnarokOS/kernel-build/releases</a></p>
+
+			<h2>But first, a word of caution</h2>
+			<hr>
+
+			<p>It goes without saying that this should not be used on mission critical
+			systems just yet, and with this being a hardened kernel which enables
+			"panic on oops", if anything goes wrong, the kernel <em>will</em> panic. So if
+			you're going to test this on a system where any type of meaningful work
+			is being done, it's important to follow the rule of "save your work often".</p>
+
+			<p>That said, don't interpret the above warning as meaning "this kernel is
+			unstable and can shit the bed at any moment". Aside from the differences
+			mentioned above, this is still the same as Debian's kernel. Under normal
+			circumstances, the kernel should not panic and if it does, there's going
+			to be a good reason for it (and you probably <em>do</em> want it to panic in
+			such a case).</p>
+
+			<p>Speaking of kernel panics, I did encounter one at boot time on a very
+			old laptop. I initially blamed it on a faulty module, but I'm not so sure
+			anymore. With kernel 6.1.64, the issue was gone, then back with version
+			6.1.66, then gone again with version 6.1.67. I have a hunch that perhaps
+			this occurred due to not installing the headers and libc-dev packages,
+			but don't quote me on that as I could very well be full of crap here.</p>
+
+			<p>Either way, let's move on.</p>
+
+			<h2>The .config file</h2>
+			<hr>
+
+			<p>As previously mentioned, this kernel is built with Debian's linux-source[3]
+			package. Their kernel config was also used as a starting point in order
+			to ensure that it worked on as many setups as Debian's version.</p>
+
+			<p>You can inspect Ragnarok's .config file which is located in the kernel-build
+			reposotiry here:
+			<a href="https://github.com/RagnarokOS/kernel-build/blob/master/ragnarok.conf">https://github.com/RagnarokOS/kernel-build/blob/master/ragnarok.conf</a></p>
+
+			<p>You can also inspect the config.diff file from the same repository, which
+			highlights the differences between the two kernels. Furthermore, once booted
+			with the kernel you can run the <code>diff -u</code> command against <code>ragnarok.conf</code> and
+			/boot/config-*-ragnarok-amd64 files to ensure they match (and if they don't, something is
+			wrong and you should most definitely open an issue on github, pasting the
+			output of your <code>diff</code> command.</p>
+
+			<h2>Building this kernel yourself</h2>
+			<hr>
+
+			<p>If you're understandably not comfortable installing and using a kernel built
+			by some random guy on the internet, you can easily build it yourself on any
+			Debian system.</p>
+
+			<p>As a prerequisite, you will need a properly set up LLVM/Clang 16 or higher,
+			which means that on Bookworm, you will have to add the apt.llvm.org repo.
+			The set up process is highlighted in my previous post (simply skip the
+			"Using LLVM/Clang as the default toolchain (Optional)" step):</p>
+
+			<p><a href="https://ianlecorbeau.github.io/blog/latest-llvm-clang-debian.html">https://ianlecorbeau.github.io/blog/latest-llvm-clang-debian.html</a></p>
+
+			<p>That being said, save yourself some trouble and do this in a chroot. I will
+			happily help with any building issues, provided the below steps were followed.</p>
+
+			<p><em>As always, '#' means the command needs to be run as root, '$' means the command
+				should be run as an unprivileged user.</em></p>
+
+			<p>First, debootstrap a 'buildd' variant of Debian Bookworm:</p>
+
+			<div class="shell">
+				<pre><code>
+# apt-get install debootstrap
+$ mkdir -p build/kernel
+# deboostrap --variant=buildd bookworm build/kernel http://deb.debian.org/debian/</pre></code>
+			</div>
+
+			<p>Next, avoid running <code>git clone</code> as the root user (even if it would be in
+			a chroot) by cloning then moving the repo:</p>
+
+			<div class="shell">
+				<pre><code>
+$ cd build/
+$ git clone https://github.com/RagnarokOS/kernel-build.git
+# mv kernel-build kernel/usr/src/</pre></code>
+			</div>
+
+			<p>While still in the build directory, change root to the kernel directory:</p>
+
+			<div class="shell">
+				<pre><code>
+# chroot kernel/</pre></code>
+			</div>
+
+			<p>Add the LLVM repo as highlighted in the linked post above, then run the llvmsetup.sh
+			script located in the kernel-build repo:</p>
+
+			<p><i>Note: if you chose to install LLVM 17 or 18, open the script and replace
+				VERSION=16 with the version of your choice</i></p>
+
+			<div class="shell">
+				<pre><code>
+/usr/src/kernel-build/llvmsetup.sh</pre></code>
+			</div>
+
+			<p>Install the linux-source package and its build dependencies, extract the
+			tarball, copy the Ragnarok config file and cd into the linux-source-*
+			directory:</p>
+
+			<div class="shell">
+				<pre><code>
+# apt-get install linux-source
+# apt-get build-dep linux
+# cd /usr/src
+# tar xvf linux-source-*.tar.xz
+# cp kernel-build/ragnarok.conf linux-source-*/.config
+# cd linux-source-*</pre></code>
+			</div>
+
+			<p>Run make oldconfig to make sure the config is up to date. 90% of the
+			time nothing new will be added, but sometimes it does happen. </p>
+
+			<div class="shell">
+				<pre><code>
+# make CC=clang LLVM=1 oldconfig</pre></code>
+			</div>
+
+			<p>Now, just start compiling/building the package and be aware that this
+			builds a distribution kernel, so it will take some time.</p>
+
+			<div class="shell">
+				<pre><code>
+# make CC=clang LLVM=1 -j$(nproc) bindeb-pkg</pre></code>
+			</div>
+
+			<p>When done, the linux-image, linux-headers and linux-libc-dev can be moved
+			out of the chroot and installed with either <code>dpkg -i</code> or <code>apt-get install</code>
+			like any other packages.</p>
+
+			<h2>Caveats</h2>
+			<hr>
+
+			<p>Whether you're using the pre-built deb or building the package yourself,
+			this kernel does not support secure boot.</p>
+
+			<p>On top of that, only modules that were signed at build time will be allowed
+			to load, so out-of-tree modules (such as proprietary NVIDIA drivers) won't
+			work unless you build the kernel yourself and sign the modules with the
+			<code>signing_key.pem</code> file located in linux-source-*/certs/.</p>
+
+			<p>If you're unsure whether you need out-of-tree modules or not, chances are
+			that you don't. So there's that.</p>
+
+			<p>
+			[1] <a href="https://clang.llvm.org/docs/ThinLTO.html">https://clang.llvm.org/docs/ThinLTO.html</a>
+			<br>
+			[2] <a href="https://clang.llvm.org/docs/ControlFlowIntegrity.html">https://clang.llvm.org/docs/ControlFlowIntegrity.html</a>
+			<br>
+			[3] <a href="https://packages.debian.org/bookworm/linux-source">https://packages.debian.org/bookworm/linux-source</a>
+			</p>
+		</div>
+		<div class="footer">
+			&copy; 2023 Ian LeCorbeau
+		</div>
+	</body>
+</html>
