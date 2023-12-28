@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+			<h1>Resetting /etc/machine-id every boot</h1>
+			<hr>
+
+			<p>The /etc/machine-id and /var/lib/dbus/machine-id files can potentially
+			be used to fingerprint a system over the long term. Of course, some will
+			argue that this is merely FUD, but it really isn't. The key word here is
+			*<em>potentially</em>*.</p>
+
+			<p>There may not be any indications that this file is actively being used
+			in a malicious capacity by anyone (or anything), but the fact that it
+			can be used in such a manner should be enough for someone who cares about
+			their privacy to take steps to at least minimize this potential threat.</p>
+
+			<h2>The dead-simple solution</h2>
+			<hr>
+
+			<p>Luckily, the solution is as simple as can be: remove the file at shutdown
+			so that it gets re-created by dbus at boot time. Obviously, the better
+			solution would be to not have the file at all, but some programs rely on
+			it, and it always gets created at boot if it doesn't exist.</p>
+
+			<p>Removing the file at shutdown is trivial with the help of a simple init
+			script. Do note that some software (systemd-journald being one of them)
+			requires that this file remains the same across reboots, so if you wish
+			to benefit from this script, alternatives to such programs will have to
+			be used.</p>
+
+			<h2>A small script</h2>
+			<hr>
+
+			<p>This is a simple sysvinit script that can easily be converted to runit
+			or OpenRC's styles.</p>
+
+			<p><em>Note: I will eventually create init scripts for runit and OpenRC, but
+				only when I have the time to actually test them. I will not share untested
+				scripts.</em></p>
+
+<div class="shell">
+<pre><code>
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:     rm-machineid
+# Required-Start:
+# Required-Stop:    
+# Default-Start:
+    # Default-stop:     0 6
+# Short-Description:    execute the rm-machineid script
+# Description:
+### END INIT INFO
+
+do_stop() {
+    echo "removing machine-id"
+
+    # on non-systemd systems, this file doesn't exist (normally)
+    if [ -f /etc/machine-id ]; then
+        rm -f /etc/machine-id
+    fi
+
+    rm -f /var/lib/dbus/machine-id
+}
+
+case "$1" in
+    start)  echo "invalid option" ;;
+    stop)   do_stop ;;
+    *)  do_stop ;;
+esac
+</pre></code>
+</div>
+
+			<p>You can also download the script here:
+			<a href="https://raw.githubusercontent.com/RagnarokOS/src/master/etc/init.d/rm-machineid">https://raw.githubusercontent.com/RagnarokOS/src/master/etc/init.d/rm-machineid</a></p>
+	
+			<p>This script should be added to the shutdown and reboot runlevels (usually
+			0 and 6). </p>
+	
+			<h2>Final note</h2>
+			<hr>
+	
+			<p>Distributions like Devuan, tails and whonix already take care of regenerating
+			machine-id every boot, so this script is not necessary if you're using one of
+			them. There may be other distributions doing the same thing, so refer to their
+			own docs to see if they do. I can only confirm that Debian does not, and it's
+			highly likely that any distribution that uses systemd (and systemd-journald)
+			do not either.</p>
+		</div>
+		<div class="footer">
+			&copy; 2023 Ian LeCorbeau
+		</div>
+	</body>
+</html>
