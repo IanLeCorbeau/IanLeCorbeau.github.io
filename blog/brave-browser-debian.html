@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+			<h1>Installing Brave Browser on Debian and Derivatives</h1>
+
+			<hr>
+
+			<p>I'm a big fan of brave. If you need to use a Chromium based browser, it's
+			the best choice (aside from Ungoogled Chromium). Although Debian and its
+			derivatives don't package the browser, the Brave project provides a <code>deb</code>
+			package through their own apt repository, as well as instructions on how
+			to enable the repo.</p>
+
+			<p>Being an opinionated bastard, however, means that I install the software
+			in a slightly different manner (for starters, I'm not a fan of running
+			<code>curl</code> as root, and nor should you).</p>
+
+			<p>Note that the process below is slightly more involved, so if you'd rather
+			just follow Brave's official instructions[1], then by all means go for it.</p>
+
+			<p><em>As always: '#' means run command as root; '$' means run as a non-root user.</em></p>
+
+			<h2>Get Brave's GPG Key</h2>
+
+			<hr>
+
+			<p>Use either curl or wget. If neither are installed on your system, I recommend
+			installing wget, simply because it will be installed as a dependency for
+			Brave later on anyway.</p>
+
+			<p>wget command:</p>
+
+			<div class="shell">
+				<pre><code>
+$ wget -q -O brave-browser-archive-keyring.gpg \
+    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg</pre></code>
+			</div>
+
+			<p>curl command:</p>
+
+			<div class="shell">
+				<pre><code>
+$ curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
+    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg</pre></code>
+			</div>
+
+			<p>Now, move the key to <code>/etc/apt/trusted.gpg.d/</code></p>
+
+			<div class="shell">
+				<pre><code>
+# mv brave-browser-archive-keyring.gpg /etc/apt/trusted.gpg.d/</pre></code>
+			</div>
+
+			<p>Next, ensure that the file has 644 mode bits and is owned by root. This is
+			very important. If the file is still owned by the non-root user, apt will
+			report that no public key for the brave browser was found.</p>
+
+			<div class="shell">
+				<pre><code>
+$ stat -c "%a %g %G" /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg</pre></code>
+			</div>
+
+			<p>The output should look like this</p>
+
+			<div class="shell">
+				<pre><code>
+644 0 root</pre></code>
+			</div>
+
+			<p>If not, change ownership</p>
+
+			<div class="shell">
+				<pre><code>
+# chmod 644 /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg
+# chown root:root /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg</pre></code>
+			</div>
+
+			<h2>Create DEB822 .sources file</h2>
+
+			<hr>
+
+			<p>I prefer keeping <code>/etc/apt/sources.list</code> for official Debian repositories only,
+			and use DEB822 style .sources files for other repos instead. They can also
+			be shared between different Debian (and derivatives) systems without disturbing
+			their original <code>sources.list</code> files.</p>
+
+			<p><code>/etc/apt/sources.list.d/brave-browser.sources</code> (<a href="../files/brave-browser.sources" target="_blank" rel="noopener noreferrer" download>download</a>)</p>
+
+			<div class="shell">
+				<pre><code>
+Types: deb
+URIs: https://brave-browser-apt-release.s3.brave.com/
+Suites: stable
+Components: main
+Signed-by: /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg</pre></code>
+			</div>
+
+			<p>Save and move the file to <code>/etc/apt/souces.list.d</code></p>
+
+			<div class="shell">
+				<pre><code>
+# mv brave-browser.sources /etc/apt/sources.list.d/</pre></code>
+			</div>
+
+			<p>The ownership note in the prior section also applies to <code>brave-browser.sources</code>.
+			so run the same <code>stat</code> command against this file, and fix if needed.</p>
+
+			<h2>Install Brave</h2>
+
+			<hr>
+
+			<p>Now, all that's left is to update and install Brave</p>
+
+			<div class="shell">
+				<pre><code>
+# apt update && apt install brave</pre></code>
+			</div>
+
+			<p>Voila.</p>
+
+			<h3>Links</h3>
+
+			<hr>
+
+			<p>[1] <a href="https://brave.com/linux/">https://brave.com/linux/</a></p>
+		</div>
+
+		<div class="footer">
+			&copy; 2023-2024 Ian LeCorbeau
+		</div>
+	</body>
+</html>
