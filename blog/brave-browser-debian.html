@@ -68,11 +68,11 @@ $ curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
     https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg</pre></code>
 			</div>
 
-			<p>Now, move the key to <code>/etc/apt/trusted.gpg.d/</code></p>
+			<p>Now, move the key to <code>/usr/share/keyrings/</code></p>
 
 			<div class="shell">
 				<pre><code>
-# mv brave-browser-archive-keyring.gpg /etc/apt/trusted.gpg.d/</pre></code>
+# mv brave-browser-archive-keyring.gpg /usr/share/keyrings/</pre></code>
 			</div>
 
 			<p>Next, ensure that the file has 644 mode bits and is owned by root. This is
@@ -81,7 +81,7 @@ $ curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
 
 			<div class="shell">
 				<pre><code>
-$ stat -c "%a %g %G" /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg</pre></code>
+$ stat -c "%a %g %G" /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
 			</div>
 
 			<p>The output should look like this</p>
@@ -95,39 +95,48 @@ $ stat -c "%a %g %G" /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg</p
 
 			<div class="shell">
 				<pre><code>
-# chmod 644 /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg
-# chown root:root /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg</pre></code>
+# chmod 644 /usr/share/keyrings/brave-browser-archive-keyring.gpg
+# chown root:root /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
 			</div>
 
 			<h2>Create DEB822 .sources file</h2>
 
 			<hr>
 
-			<p>I prefer keeping <code>/etc/apt/sources.list</code> for official Debian repositories only,
-			and use DEB822 style .sources files for other repos instead. They can also
-			be shared between different Debian (and derivatives) systems without disturbing
-			their original <code>sources.list</code> files.</p>
+			<p>When it comes to apt's sources, I very much prefer using DEB822 style <code>.sources</code>
+			files. They're cleaner, and there's apparently a plan to make them the default
+			in the future (finally one change I'm not averse to).</p>
 
 			<p><code>/etc/apt/sources.list.d/brave-browser.sources</code> (<a href="../files/brave-browser.sources" target="_blank" rel="noopener noreferrer" download>download</a>)</p>
 
-			<div class="shell">
-				<pre><code>
+<div class="shell">
+<pre><code>
 Types: deb
 URIs: https://brave-browser-apt-release.s3.brave.com/
 Suites: stable
 Components: main
-Signed-by: /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg</pre></code>
-			</div>
+Signed-by: /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
+</div>
 
-			<p>Save and move the file to <code>/etc/apt/souces.list.d</code></p>
+			<p>Save and move the file to <code>/etc/apt/souces.list.d</code>.</p>
 
-			<div class="shell">
-				<pre><code>
+<div class="shell">
+<pre><code>
 # mv brave-browser.sources /etc/apt/sources.list.d/</pre></code>
-			</div>
+</div>
 
-			<p>The ownership note in the prior section also applies to <code>brave-browser.sources</code>.
-			so run the same <code>stat</code> command against this file, and fix if needed.</p>
+			<p>If you'd rather stick to the .list file, simply:</p>
+
+<div class="shell">
+<pre><code>
+$ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" \
+> brave-browser-release.list
+# mv brave-browser-release.list /etc/apt/sources.list.d/</pre></code>
+</div>
+
+			<p>The ownership note in the prior section also applies to <code>brave-browser.sources</code>
+			(or <code>brave-browser-release.list</code>), so run the same <code>stat</code> command against this file,
+			and fix if needed.</p>
 
 			<h2>Install Brave</h2>
 
@@ -141,6 +150,26 @@ Signed-by: /etc/apt/trusted.gpg.d/brave-browser-archive-keyring.gpg</pre></code>
 			</div>
 
 			<p>Voila.</p>
+
+			<h2>Post install</h2>
+
+			<hr>
+
+			<p>After installation, the brave-keyring package may create a file called
+			<code>brave-browser-release.gpg</code> in <code>/etc/apt/trusted.gpg.d/</code>, which is linked
+			to <code>/usr/share/keyrings/brave-browser-archive-keyring.gpg</code>. This happens
+			because the package verifies if the old keyring file is being used, and if
+			so, will create the symlink in order to ensure the new one is going to be used.</p>
+
+			<p>However, in our case, this happens because the postinst script does its check
+			in the <code>brave-browser-release.list</code> file, which was not created since we're
+			using the (better) deb822 format. Either way, no problem, simply remove the
+			file if it exists</p>
+
+<div class="shell">
+<pre><code>
+# if [ -f /etc/apt/trusted.gpg.d/brave-browser-release.gpg ]; then rm /etc/apt/trusted.gpg.d/brave-browser-release.gpg; fi</pre></code>
+</div>
 
 			<h3>Links</h3>
 
