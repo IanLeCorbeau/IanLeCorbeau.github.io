@@ -208,6 +208,19 @@ fi
 <p>In essence, <code>postinst</code> is called with specific arguments (e.g. <code>configure</code>)
 and if "$2" is null, then this is an install, rather than an upgrade.</p>
 
+<h2>Build the package</h2>
+<hr>
+
+<p>When you're done, all that's left is using the equivs-build command to
+build the package, by supplying the name of the control file as an argument:
+</p>
+
+<div class="shell">
+<pre><code>
+$ equivs-build mypkg_name
+</code></pre>
+</div>
+
 <h2>Caveat</h2>
 <hr>
 
