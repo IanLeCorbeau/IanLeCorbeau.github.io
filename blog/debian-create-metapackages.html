@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="keywords" content="Brave Browser, Debian, Ubuntu, Linux Mint, Install Brave browser Debian, Install Brave Browser Ubuntu, Install brave browser linux mint">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+<h1>[Debian &amp; Derivatives] Easily Create Metapackages</h1>
+<hr>
+
+<p>There are many ways one can use to make reinstalling a system, or even
+redistributing modifications across multiple machines, more convenient.
+Using metapackages is an often overlooked way of doing just that.</p>
+
+<p>Here we'll go through creating both a simple, empty metapackage which
+simply installs a bunch of packages as dependencies, as well as a more
+elaborate one containing a postinst script and some special files.</p>
+
+<p>For this we'll be using the <code>equivs-build</code> command.</p>
+
+<h2>Install equivs</h2>
+<hr>
+
+<p>First, install the equivs[1] package:</p>
+
+<div class="shell">
+<pre><code>
+# apt-get install --no-install-recommends -y equivs</code></pre>
+</div>
+
+<h2>Basic Template</h2>
+<hr>
+
+<p>Create a working directory and cd into it:</p>
+
+<div class="shell">
+<pre><code>
+$ mkdir mympkg
+$ cd mympkg</code></pre>
+</div>
+
+<p>Next, create a control file. You can use the <code>equivs-control</code> command to
+generate a file automatically and fill out the appropriate fields while
+removing those not needed, or you can create the file manually.</p>
+
+<p>Create automatically (substitute <code>mypkg_name</code> for whatever you want as
+the name for your metapackage):</p>
+
+<div class="shell">
+<pre><code>
+$ equivs-control mypkg_name</code></pre>
+</div>
+
+<p>Doing it manually isn't that much more complicated. For a basic package
+only a few fields are required.</p>
+
+<p>Create/open the <code>mypkg_name</code> control file in your preferred text editor
+and add the following:</p>
+
+<div class="shell">
+<pre><code>
+Package: mypkg_name
+Version: 01
+Maintainer: Your Name &lt;your@email.example&gt;
+Architecture: amd64
+Depends: pkg1,
+ pkg2,
+ pkg3,
+ pkg4,
+Description: Short description
+ Long description. Don't exceed 72 characters per line.
+ If you need paragraphs, separate with a dot (.), like
+ this.
+ .
+ This is a new paragraph.</code></pre>
+</div>
+
+<h2>More Elaborate</h2>
+<hr>
+
+<p>This is why this post exists. Let's be honest, if all you need is to
+install a series of packages you could just use a basic shell script, for
+example.</p>
+
+<p>The following <code>mypkg_name</code> control file example does the same as the basic
+one, but adds a <code>postinst</code> script and a few files to copy over.</p>
+
+<div class="shell">
+<pre><code>
+Package: mypkg_name
+Version: 01
+Maintainer: Your Name &lt;your@email.example&gt;
+Architecture: amd64
+Depends: pkg1,
+ pkg2,
+ pkg3,
+ pkg4,
+ Postinst: postinst
+ Files: file1 /path/where/file1/should/be/installed/
+  file2 /path/where/file2/should/be/installed/
+Description: Short description
+ Long description. Don't exceed 72 characters per line.
+ If you need paragraphs, separate with a dot (.), like
+ this.
+ .
+ This is a new paragraph.</code></pre>
+</div>
+
+<p>Note: All files that you want to add to your metapackage, as well as the
+<code>postinst</code> file should be in the working directory.</p>
+
+<h2>The postinst script</h2>
+<hr>
+
+<p>This is a shell script that will be executed at the end of the package's
+installation and can perform any action you want. For example, you could
+set special permissions to <code>file1</code> and make sure it is owned by a specific
+user:</p>
+
+<div class="shell">
+<pre><code>
+#!/bin/sh
+
+set -e
+
+chmod 600 /path/to/file1
+chown someuser:someuser /path/to/file1</code></pre>
+</div>
+
+<p>Speaking of file permissions, you could use it to set the permissions of
+various files on the system, not just the ones provided by the metapackage.
+For example, this bit taken from Ragnarok's <code>security-check</code>[2] cronjob
+could be used to ensure that a wireless network's <code>interface</code> file is
+only readable by root:</p>
+
+<div class="shell">
+<pre><code>
+#!/bin/sh
+
+set -e
+
+for _file in $(find /etc/network/interfaces.d/ -type f); do
+    if [ "$(stat -c "%a %g %G" "$_file")" != "600 0 root" ]; then
+        /usr/bin/chmod 600 "$_file"
+        /usr/bin/chown root:root "$_file"
+        printf '%s\n' "Fixed ${_file}'s permissions."
+    else
+        printf '%s\n' "${_file}'s permissions are OK."
+    fi
+done</code></pre>
+</div>
+
+<p>Or perhaps set your system's default browser (if you have more than one
+installed):</p>
+
+<div class="shell">
+<pre><code>
+#!/bin/sh
+
+set -e
+
+update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/preferred-browser 100</code></pre>
+</div>
+
+<p>Likewise for your preferred editor, compiler, awk version (mawk,
+original-awk, gawk), etc..</p>
+
+<p>You are only limited by your imagination. Take note, however, that
+<code>postinst</code> is executed as the root user, so careful not to mess things
+up.</p>
+
+<p>If there are any specific actions you'd rather have performed only during
+the initial installation of your metapackage but not when it is updated,
+you can use an if...else statement:</p>
+
+<div class="shell">
+<pre><code>
+#!/bin/sh
+
+set -e
+
+if [ -z "$2" ]; then
+    # actions to be performed on install
+fi
+</code></pre>
+</div>
+
+<p>In essence, <code>postinst</code> is called with specific arguments (e.g. <code>configure</code>)
+and if "$2" is null, then this is an install, rather than an upgrade.</p>
+
+<h2>Caveat</h2>
+<hr>
+
+<p>The one drawback is that removing a program installed as a dependency of this
+metapackage will make apt want to uninstall the whole thing. So if you wanted
+to replace a specific program with another, you would have to rebuild your
+metapackage with the new dependency and reinstall, then remove the superfluous
+package, rather than doing just <code>apt remove package</code>.</p>
+
+<h3>Links</h3>
+<hr>
+
+<p>[1] <a href="https://manpages.debian.org/bookworm/equivs/index.html">https://manpages.debian.org/bookworm/equivs/index.html</a> <br>
+[2] <a href="https://github.com/RagnarokOS/src/blob/master/base/etc/cron.weekly/security-check">https://github.com/RagnarokOS/src/blob/master/base/etc/cron.weekly/security-check</a></p>
+		</div>
+
+		<div class="footer">
+			&copy; 2023-2024 Ian LeCorbeau
+		</div>
+	</body>
+</html>
