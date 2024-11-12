@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="keywords" content="debian, mmdebstrap, debootstrap, debian minimal install, install debian the arch way, ubuntu, linux mint, minimalism">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../rss/index.html">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+<h1>Use mmdebstrap to install Debian (and more)</h1>
+<hr>
+
+<p>This is a follow up to my
+<a href="https://ianlecorbeau.github.io/blog/debian-debootstrap-install.html">Debian Deboostrap Install</a>
+guide posted a few years back. I will not go through the whole install
+process again here, you can simply follow the guide as written and replace
+the <code>debootstrap</code> command with <code>mmdebstrap</code> when you've reached that step.</p>
+
+<h2>mmdebstrap - multi-mirror Debian chroot creation</h2>
+<hr>
+
+<p>The <code>debootstrap</code> utility is a fantastic tool that allows you to create
+custom Debian installs as big or as small as you want. It's a bit limited,
+though. For exmaple, it can only use a single mirror to fetch packages
+when creating the system (which can be a security risk, among other things).</p>
+
+<p>This is where <code>mmdebstrap</code> comes in. It fixes the security concern through
+the use of multiple mirrors (including Debian's security mirror) and offers
+much more customizing options, especially thanks to 'hooks'.</p>
+
+<p>Make no mistake, <code>debootstrap</code> can be as powerful through a good dose of
+scripting, but <code>mmdebstrap</code>'s hooks, and other built in options, offer a
+much more straightforward way of doing it.</p>
+
+<h2>The bread and butter</h2>
+<hr>
+
+<p>First, install mmdebstrap:</p>
+
+<div class="shell">
+<pre><code>
+# apt-get install mmdebstrap -y</code></pre>
+</div>
+
+<p>If all you want is to create a minimal Debian chroot as in the debootstrap
+guide linked above, substituting the <code>debootstrap</code> command with mmdebstrap,
+then the following will suffice:</p>
+
+<div class="shell">
+<pre><code>
+# /usr/bin/mmdebstrap --variant=minbase \
+    --components="main non-free-firmware" \
+    --include="usrmerge vim" \
+    --skip=check/empty \
+    $FLAVOUR $TARGET</code></pre>
+</div>
+
+<p>Replace <code>$FLAVOUR</code> with the right Debian version (currently, <code>bookworm</code>)
+and <code>$TARGET</code> with the target directory, usually <code>/mnt</code> when performing
+a chroot-style install.</p>
+
+<p><code>--include="usrmerge vim"</code>: Debian now has merged usr, and this package
+will be fetched regardless, but I have encountered situations where not
+including it caused some issues. Vim is there because having an editor
+inside the chroot is convenient, but if you prefer something else, go
+for it. You can add any other packages to <code>--include</code>, but most packages
+(especially things like the kernel and init system) should be installed
+either in the chroot or when booted into a new install.</p>
+
+<p><code>--skip=check/empty</code>: normally, <code>mmdebstrap</code> will fail if the target dir
+is not empty. This is a problem when doing a chroot install since you will
+most likely have <code>/home</code> and probably <code>/boot</code> already created and mounted.
+This flag skips the check, so the command will succeed. You may remove this
+flag if you are creating a chroot, rather than performing an install.</p>
+
+<h2>Hooks</h2>
+<hr>
+
+<p>These are commands that get executed by <code>mmdebstrap</code> at various stages
+of the chroot creation. They are two things, really:</p>
+
+<ol>
+<li>Individual commands passed as options to <code>mmdebstrap</code>, or</li>
+<li>Scripts containing multiple commands.</li>
+</ol>
+
+<p>Types of hook:</p>
+
+<ul>
+<li><p><code>setup</code> hook: executes commands after directory creation and configuration
+of apt and dpkg, but before packages are downloaded and installed.</p></li>
+<li><p><code>extract</code> hook: executes commands after essential packages were extracted
+but before they are installed.</p></li>
+<li><p><code>essential</code> hook: executes commands after the essential packages were
+installed, but before installing all other packages.</p></li>
+<li><p><code>customize</code> hook: executes commands after the chroot was created but before
+finalizing. This is the hook that gets used the most.</p></li>
+</ul>
+
+<h3>Hooks as individual commands</h3>
+<hr>
+
+<p>Passing a single command as a hook to <code>mmdebstrap</code> is rather simple:</p>
+
+<div class="shell">
+<pre><code>
+# /usr/bin/mmdebstrap --variant=minbase \
+    --components="main non-free-firmware" \
+    --include="usrmerge vim" \
+    --setup-hook='cp mydir "$1"/etc/'
+    --essential-hook='echo tzdata tzdata/Areas select America | chroot "$1" debconf-set-selections'
+    --essential-hook='echo tzdata tzdata/Zones/America select Toronto | chroot "$1" debconf-set-selections'
+    --customize-hook='echo myhostname &gt; "$1"/etc/hosts' \
+    --skip=check/empty \
+    $FLAVOUR $TARGET</code></pre>
+</div>
+
+<p>The <code>--setup-hook</code> would copy a directory (mydir) to the chroot, for example
+if it contained anything needed during setup.</p>
+
+<p>The two <code>--essential-hook</code> would set the timezone to America/Toronto.</p>
+
+<p>The <code>--customize-hook</code> would set the chroot's hostname.</p>
+
+<p>Note that <code>"$1"</code> represents the <code>$TARGET</code>, always use "$1" whether you're
+performing a command in the chroot (eg, chroot "$1" somecommand) or copying
+something to the chroot (eg cp somefile "$1"/etc/skel/). This ensures that
+the commands will work no matter what <code>$TARGET</code> is.</p>
+
+<h3>Hook scripts</h3>
+<hr>
+
+<p>Passing commands to <code>mmdebstrap</code> in the above manner suffices when there
+aren't many, but for extensive customization, using hook scripts become
+a lot more useful.</p>
+
+<p>First, create a hook directory:</p>
+
+<div class="shell">
+<pre><code>
+$ mkdir hooks</code></pre>
+</div>
+
+<p>Next, simply create your scripts, and name them after the specific stage
+they should be performed in, eg <code>customize01.sh</code>. You can have multiple
+scripts for each stages, and they would be executed alphabetically,
+hence the <code>01</code>. A second script would be named <code>customize02.sh</code>, and so
+on.</p>
+
+<p>Hook scripts can be in any scripting language as long as its dependencies
+are available in the chroot, at the stage they are to be executed.</p>
+
+<p>Example customize01.sh script in POSIX sh:</p>
+
+<div class="shell">
+<pre><code>
+#!/bin/sh
+
+set -e
+
+# Set the default debconf frontend to Readline
+echo 'debconf debconf/frontend select Readline' | chroot "$1" debconf-set-selections
+
+# Enable the wheel group.
+sed -i '15 s/^# //' "$1"/etc/pam.d/su
+chroot "$1" addgroup --system wheel
+
+# Set the system's hostname.
+echo "myhostname" &gt; "$1"/etc/hostname
+
+# Set the timezone
+echo "tzdata tzdata/Areas select America" \
+    | chroot "$1" debconf-set-selections
+echo "tzdata tzdata/Zones/America select New_York" \
+    | chroot "$1" debconf-set-selections
+echo 'tzdata tzdata/Zones/Etc select UTC' \
+       | chroot "$1" debconf-set-selections
+# This has to be done or else dpkg-reconfigure insists on using Etc
+# as the default timezone for whatever stupid reason.
+echo "America/New_York" &gt; "$1"/etc/timezone
+chroot "$1" ln -sf /usr/share/zoneinfo/America/New_York" /etc/localtime
+chroot "$1" dpkg-reconfigure -f noninteractive tzdata
+
+# Set locale
+echo "locales locales/default_environment_locale select en_US.UTF-8" \
+    | chroot "$1" debconf-set-selections
+echo "locales locales/locales_to_be_generated multiselect en_US.UTF-8 UTF-8" \
+    | chroot "$1" debconf-set-selections
+chroot "$1" apt-get install locales -y</code></pre>
+</div>
+
+<p>Then <code>chmod +x</code> customize01.sh to make it executable.</p>
+
+<p>Using the script with <code>--hook-directory</code>:</p>
+
+<div class="shell">
+<pre><code>
+# /usr/bin/mmdebstrap --variant=minbase \
+    --components="main non-free-firmware" \
+    --include="usrmerge vim" \
+    --hook-directory=hooks \
+    --skip=check/empty \
+    $FLAVOUR $TARGET</code></pre>
+</div>
+
+<p>There you go. Hooks can be used to setup the whole system the same way
+you would when performing a chroot-style install.</p>
+
+<h2>Creating tarballs</h2>
+<hr>
+
+<p>Another useful built-in fuction of <code>mmdebstrap</code> is its ability to create
+an archive of the chroot automatically. This is especially useful if you
+want custom chroots that can be used anywhere, or a custom Debian system
+that can be installed simply by extracting the tarball to /mnt (for example).</p>
+
+<p>To create an archive, simply change the <code>$TARGET</code> from a directory to a
+tarball, eg:</p>
+
+<div class="shell">
+<pre><code>
+# /usr/bin/mmdebstrap --variant=minbase \
+    --components="main non-free-firmware" \
+    --include="usrmerge vim" \
+    --hook-directory=hooks \
+    $FLAVOUR custom-chroot.tgz</code></pre>
+</div>
+
+<p>When extracting the chroot, you will need to use the following command
+in order to make sure the proper permissions are retained:</p>
+
+<div class="shell">
+<pre><code>
+# tar xzpvf custom-chroot.tgz --xattrs --xattrs-include='*' --numeric-owner -C $TARGET</code></pre>
+</div>
+
+<p><code>$TARGET</code> can either be any directory, or /mnt in the case of an install.</p>
+
+<h2>Bonus cleanup script</h2>
+<hr>
+
+<p>Whether you intend to share your chroot tarball, host it online or simply
+use it everywhere, it is good practice to clean it up a little. </p>
+
+<p><code>customize02.sh</code></p>
+
+<div class="shell">
+<pre><code>
+#!/bin/sh
+
+set -e
+
+chroot "$1" apt clean
+rm -rf "$1"/var/lib/apt/lists/*
+rm "$1"/var/log/apt/eipp.log.xz
+rm "$1"/var/log/apt/history.log
+rm "$1"/var/log/apt/term.log
+rm "$1"/var/log/alternatives.log
+rm "$1"/var/log/dpkg.log
+rm "$1"/etc/resolv.conf
+rm "$1"/tmp/*
+for _file in /etc/machine-id /var/lib/dbus/machine-id; do
+    if [ -f "${1}/${_file}" ]; then
+        rm "${1}/${_file}"
+    fi
+done</code></pre>
+</div>
+
+<h3>Links</h3>
+<hr>
+
+<p>[1] <a href="https://manpages.debian.org/bookworm/mmdebstrap/mmdebstrap.1.en.html">mmdebstrap manual page</a></p>
+		</div>
+		<div class="footer">
+			&copy; 2023-2024 Ian LeCorbeau
+		</div>
+	</body>
+</html>
