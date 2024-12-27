@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="keywords" content="Brave Browser, JIT, disable jit, chromium, just in time compilation, jit security">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+
+			<h1>Tip: Run Brave Browser Without JIT</h1>
+			<hr>
+
+			<p>When it comes to secure web browsers, Brave is at the top of the list
+			(no matter how some might want to disagree). However, extra hardening is
+			never a bad thing, and one of the simplest way is to disable JIT.</p>
+
+			<h2>JIT in a Nutshell</h2>
+			<hr>
+
+			<p>"JavaScript Just-In-Time (JIT) compilation is a technique used by modern
+			web browsers to optimize the execution of JavaScript code. In this context,
+			JIT refers to the compilation of JavaScript code into bytecode, which is
+			then executed by an interpreter. This process occurs dynamically, during
+			runtime, hence the term Just-In-Time."</p>
+
+			<p>The above was courtesy of <a href="https://search.brave.com/">Brave Search</a> by
+			the way.</p>
+
+			<h2>Security Implications</h2>
+			<hr>
+
+			<p>The problem with JIT, though, is the increased attack surface it provides.
+			You know when they say that browsers are the biggest attack vector on a
+			computer? Well, JIT certainly doesn't help with that.</p>
+
+			<p>On top of that, it can be exploited in a number of ways, such as bypassing
+			ASLR and data prevention execution (JIT spraying), and code injection
+			attacks. Then there's the potential information leaks and arbitrary code
+			execution.</p>
+
+			<p>Overall, for better security, JIT is something that should be used only
+			if you absolutely need it. How do you know if you need it or not? As a
+			general rule (which I use for myself as well) is "if you don't know whether
+			you need something or not, assume you don't need it, until you do".</p>
+
+			<p>So, what to do?</p>
+
+			<h2>Disable JIT</h2>
+			<hr>
+
+			<p>The easy solution is to disable JIT when running Brave, and this is easily
+			done through the command line by using a simple flag:</p>
+
+			<div class="shell">
+<pre><code>
+$ /usr/bin/brave-browser --js-flags='--jitless' &amp;</code></pre>
+</div>
+
+			<p>This can be made into a script like
+			<a href="https://raw.githubusercontent.com/IanLeCorbeau/dotfiles/refs/heads/master/.local/bin/brave-launch">this one</a>,
+			or used as a command with sxhkd or xbindkeys.</p>
+
+			<p><em>Note that this flag will work with any Chromium-based browser (at least
+				it works with pure Chromium), but why use them when you can use Brave?</em></p>
+
+			<h2>Considerations</h2>
+			<hr>
+
+			<p>It goes without saying that like any other hardening technique, this does
+			not render your browser 100% bulletproof, and the usual security considerations
+			still apply.</p>
+
+			<p>Also, disabling JIT may cause a loss of performance, but this is a "your
+			mileage may vary" type of situation. I have not noticed any slowness so
+			far, so my best guess is that whatever performance loss that occurs is
+			in the range of milliseconds at most. Again, YMMV. If you want security,
+			though, this is a potential trade off you need to accept.</p>
+
+		</div>
+
+		<div class="footer">
+			&copy; 2023-2024 Ian LeCorbeau
+		</div>
+	</body>
+</html>
