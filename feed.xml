@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+	<channel>
+		<title>Ian LeCorbeau</title>
+		<link>https://ianlecorbeau.github.io</link>
+		<description>BDFL @ Ragnarok, cybersecurity and infosec zealot, privacy/freedom 
+			advocate and strength training enthusiast.</description>
+		<item>
+			<title>Ragnarok and OpenBSD's ksh</title>
+			<link>https://github.com/RagnarokOS/oksh/releases/tag/7.5</link>
+			<description><![CDATA[
+			<p>The reason Ragnarok uses OpenBSD's ksh as the default interactive shell is because A) I like it (obviously) and it's what I use, and B) It does most of what bash does, yet with a MUCH smaller and saner code base (which helps with security, on top of it).</p>
+			<p>For Debian/Devuan users who want to try it, a .deb package is available outside the Ragnarok repo, or the <a href="https://github.com/RagnarokOS/oksh">source</a> can just be cloned and built manually (it requires Clang by default, though).</p>
+			<p>Users of other Linux distributions (or who don't have access to Clang on Debian) should just grab the source from Ibara's <a href="https://github.com/ibara/oksh">github repo</a>.</p>
+			]]>
+			</description>
+			<pubDate>Sun, 05 Jan 2025 12:19:43 -0500</pubDate>
+		</item>
+		<item>
+			<title>Tip: Run Brave Browser Without JIT</title>
+			<link>https://ianlecorbeau.github.io/blog/brave-jitless.html</link>
+			<description>
+				Security tip: run your browser without JS Just-In-Time 
+				compilation to prevent potential code injection, JIT spraying 
+				and arbitrary code execution attacks.
+			</description>
+			<pubDate>Fri, 27 Dec 2024 13:27:00 -0500</pubDate>
+		</item>
+		<item>
+			<title>"Off Day" Training</title>
+			<link>https://ianlecorbeau.github.io/blog/off-day-training.html</link>
+			<description>
+				Off days don't have to be completely off. In fact, using them to do extra workouts is often the best way to build consistency. This is a simple yet effective workout to do on non-training days (or as a training day for those who don't normally train).
+			</description>
+			<pubDate>Mon, 23 Dec 2024 13:25:31 -0500</pubDate>
+		</item>
+		<item>
+			<title>Use mmdebstrap to install Debian (and more)</title>
+			<description>
+				This is a follow up to my Debian Deboostrap Install guide posted a few years back.
+			</description>
+			<pubDate>Tue, Nov 12 2024 14:08:00 -0500</pubDate>
+		</item>
+	</channel>
+</rss>
