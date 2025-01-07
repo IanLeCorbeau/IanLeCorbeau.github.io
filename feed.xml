@@ -6,6 +6,21 @@
 		<description>BDFL @ Ragnarok, cybersecurity and infosec zealot, privacy/freedom 
 			advocate and strength training enthusiast.</description>
 		<item>
+			<title>Debian/Devuan: Use doas and Resurrect the Wheel Group</title>
+			<link>https://ianlecorbeau.github.io/gists/debian-use-doas-and-wheel-group.md</link>
+			<description>
+       				<![CDATA[
+				<p>Quick tip for Debian/Devuan users: replace sudo with doas and resurrect the wheel group:</p>
+				<p># apt-get install -y doas<br>
+				# sed '15 s/^# //' /etc/pam.d/su<br>
+				# addgroup --system wheel<br>
+				# echo "permit :wheel" > /etc/doas.conf</p>
+				<p>Or, just switch to <a href="https://ragnarokos.github.io/download.html">Ragnarok</a>, it uses them by default.</p>
+				]]>
+			</description>
+			<pubDate>Tue, 07 Jan 2025 13:37:48 -0500</pubDate>
+		</item>
+		<item>
 			<title>Ragnarok and OpenBSD's ksh</title>
 			<link>https://github.com/RagnarokOS/oksh/releases/tag/7.5</link>
 			<description><![CDATA[
