@@ -25,7 +25,6 @@
 		</div>
 		<div class="post">
 <h1>Debian Bookworm with Syvinit (Plus Bonus Init Script and Other Extras)</h1>
-<hr>
 
 <p>Almost a week after its release, I finally upgraded my daily driver to Bookworm.
 This is what I was waiting for in order to switch to sysvinit on my main machine.
@@ -44,8 +43,6 @@ OpenRC, just swap 'sysv-rc' with 'openrc').</p>
 
 <h2>Obligatory Disclaimers</h2>
 
-<hr>
-
 <p>Disclaimer #1: This isn't an anti-systemd post, so don't ask "what's wrong with
 systemd?". This is not a "systemd bad" post, but a "sysvinit good" one.</p>
 
@@ -55,8 +52,6 @@ system on Debian, plain and simple. It wouldn't be much of a post if I just said
 experience, then most definitely go with Devuan.</p>
 
 <h2>Pre-Switching Notes</h2>
-
-<hr>
 
 <p>First, if you're going to do this, the only surefire way of doing it without
 encountering a problem is by installing Debian with debootstrap[3], using the
@@ -74,8 +69,6 @@ the system didn't boot. On the second try, I encountered the same error as on th
 first try but the system booted for some reason. Hence the unpredictable factor.</p>
 
 <h2>Switching</h2>
-
-<hr>
 
 <p>Now the meat and potatoes.</p>
 
@@ -101,8 +94,6 @@ systemd and all from being reinstalled, since it satisfies the logind dependency
 
 <h2>Post Switch</h2>
 
-<hr>
-
 <p>This is not necessary, but highly recommended.</p>
 
 <p>Because rsyslog is not installed by default on Bookworm, you should probably install
@@ -120,8 +111,6 @@ leave everything else blank when prompted while installing dma.</p>
 </code></pre>
 
 <h2>Bonus Init Script</h2>
-
-<hr>
 
 <p>If you want increased privacy, you can use Ragnarok's rm-machineid[4] init script. Details
 as to why you might want that are given in the link at the end.</p>

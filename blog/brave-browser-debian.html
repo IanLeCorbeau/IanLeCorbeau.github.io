@@ -27,8 +27,6 @@
 		<div class="post">
 			<h1>Installing Brave Browser on Debian and Derivatives</h1>
 
-			<hr>
-
 			<p>I'm a big fan of brave. If you need to use a Chromium based browser, it's
 			the best choice (aside from Ungoogled Chromium). Although Debian and its
 			derivatives don't package the browser, the Brave project provides a <code>deb</code>
@@ -45,8 +43,6 @@
 			<p><em>As always: '#' means run command as root; '$' means run as a non-root user.</em></p>
 
 			<h2>Get Brave's GPG Key</h2>
-
-			<hr>
 
 			<p>Use either curl or wget. If neither are installed on your system, I recommend
 			installing wget, simply because it will be installed as a dependency for
@@ -86,8 +82,6 @@
 
 			<h2>Create DEB822 .sources file</h2>
 
-			<hr>
-
 			<p>When it comes to apt's sources, I very much prefer using DEB822 style <code>.sources</code>
 			files. They're cleaner, and there's apparently a plan to make them the default
 			in the future (finally one change I'm not averse to).</p>
@@ -116,8 +110,6 @@ Signed-by: /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
 
 			<h2>Install Brave</h2>
 
-			<hr>
-
 			<p>Now, all that's left is to update and install Brave</p>
 
 <pre><code># apt update && apt install brave-browser</pre></code>
@@ -125,8 +117,6 @@ Signed-by: /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
 			<p>Voila.</p>
 
 			<h2>Post install</h2>
-
-			<hr>
 
 			<p>After installation, the brave-keyring package may create a file called
 			<code>brave-browser-release.gpg</code> in <code>/etc/apt/trusted.gpg.d/</code>, which is linked
@@ -142,8 +132,6 @@ Signed-by: /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
 <pre><code># if [ -f /etc/apt/trusted.gpg.d/brave-browser-release.gpg ]; then rm /etc/apt/trusted.gpg.d/brave-browser-release.gpg; fi</pre></code>
 
 			<h3>Links</h3>
-
-			<hr>
 
 			<p>[1] <a href="https://brave.com/linux/">https://brave.com/linux/</a></p>
 		</div>

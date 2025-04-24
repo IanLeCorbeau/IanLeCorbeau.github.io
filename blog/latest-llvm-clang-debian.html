@@ -26,7 +26,6 @@
 		<div class="post">
 
 			<h1>Debian: Install More Recent LLVM/Clang Toolchain</h1>
-			<hr>
 
 			<p><i>December 10, 2024 update: It appears that Clang 16 is, in fact,
 			available in Debian Bookworm. I highly doubt it got randomly added
@@ -51,7 +50,6 @@
 			in the official Debian repo will serve you just as well.</p>
 
 			<h2>Enter apt.llvm.org</h2>
-			<hr>
 
 			<p>Although it's normally my preferred option, I wasn't willing to wait hours
 			for a new LLVM version to compile on that day (I'm not the most patient man
@@ -63,7 +61,6 @@
 			in the steps below.</p>
 
 			<h2>Adding the repository</h2>
-			<hr>
 
 			<p>First, as the root user, create a deb822-style sources file in <code>/etc/apt/sources.list.d/</code>
 			called <code>llvm.sources</code>:</p>
@@ -97,7 +94,6 @@ $ curl -OL https://apt.llvm.org/llvm-snapshot.gpg.key
 			<p>And now, brace yourself.</p>
 
 			<h2>Installing the packages</h2>
-			<hr>
 
 			<p>As root:</p>
 
@@ -114,7 +110,6 @@ $ curl -OL https://apt.llvm.org/llvm-snapshot.gpg.key
 			but if you do, refer to the "install" sections at apt.llvm.org.</p>
 
 			<h2>Proper set-up with update-alternatives</h2>
-			<hr>
 
 			<p>This step is required in order to build the Linux kernel with the full
 			toolchain properly, and mandatory if you want to use LLVM/Clang as the
@@ -166,7 +161,6 @@ $ curl -OL https://apt.llvm.org/llvm-snapshot.gpg.key
 </pre></code>
 
 			<h2>Using LLVM/Clang as the default toolchain (Optional)</h2>
-			<hr>
 
 			<p>If you wish to set LLVM/Clang as your default toolchain, use update-alternatives
 			to set the proper symlinks.</p>
@@ -184,7 +178,6 @@ $ curl -OL https://apt.llvm.org/llvm-snapshot.gpg.key
 </pre></code>
 
 			<h2>Scripting the process</h2>
-			<hr>
 
 			<p>If you would like to do the whole process (minus the repo setup) in one go,
 			you can use this simple script, after making sure it doesn't do anything
@@ -193,7 +186,6 @@ $ curl -OL https://apt.llvm.org/llvm-snapshot.gpg.key
 			<p><a href="https://github.com/IanLeCorbeau/dotfiles/blob/master/.local/bin/llvm-default.sh">https://github.com/IanLeCorbeau/dotfiles/blob/master/.local/bin/llvm-default.sh</a></p>
 
 			<h2>Links</h2>
-			<hr>
 
 			<p>[1] <a href="https://clang.llvm.org/docs/ControlFlowIntegrity.html">https://clang.llvm.org/docs/ControlFlowIntegrity.html</a><br>
 			[2] <a href="https://github.com/RagnarokOS/kernel-build/releases">https://github.com/RagnarokOS/kernel-build/releases</a></p>

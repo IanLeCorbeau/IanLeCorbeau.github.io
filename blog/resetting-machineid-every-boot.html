@@ -25,7 +25,6 @@
 		</div>
 		<div class="post">
 			<h1>Resetting /etc/machine-id every boot</h1>
-			<hr>
 
 			<p>The /etc/machine-id and /var/lib/dbus/machine-id files can potentially
 			be used to fingerprint a system over the long term. Of course, some will
@@ -38,7 +37,6 @@
 			their privacy to take steps to at least minimize this potential threat.</p>
 
 			<h2>The dead-simple solution</h2>
-			<hr>
 
 			<p>Luckily, the solution is as simple as can be: remove the file at shutdown
 			so that it gets re-created by dbus at boot time. Obviously, the better
@@ -52,7 +50,6 @@
 			be used.</p>
 
 			<h2>A small script</h2>
-			<hr>
 
 			<p>This is a simple sysvinit script that can easily be converted to runit
 			or OpenRC's styles.</p>
@@ -97,7 +94,6 @@ esac
 			0 and 6). </p>
 	
 			<h2>Final note</h2>
-			<hr>
 	
 			<p>Distributions like Devuan, tails and whonix already take care of regenerating
 			machine-id every boot, so this script is not necessary if you're using one of

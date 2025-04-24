@@ -26,8 +26,6 @@
 		<div class="post">
 <h1>Debian Debootstrap Install (AKA Installing Debian "the Arch way")</h1>
 
-<hr>
-
 <p>I’m not going to start by listing a number of reasons why you might want to do
 this. Chances are, if you found this guide it’s because you wanted to try it out,
 and have your reasons. If you don’t have any, then perhaps just the fun of it and
@@ -40,8 +38,6 @@ which will omit some packages, but chances are you’ll end up installing some o
 later. Regardless, it’s still worth doing, so let’s get to it right away.</p>
 
 <h2>Pre Installation Notes</h2>
-
-<hr>
 
 <ul>
 <li><p>It’s not a bad idea to do this in a virtual machine or an old computer first.  </p></li>
@@ -57,14 +53,10 @@ with this process.</p></li>
 
 <h2>Switching to the root account</h2>
 
-<hr>
-
 <p>It’s a lot more convenient to switch to the root account. That way, no need to constantly
 type sudo. If the root account is locked, just typing <code>sudo su</code> or <code>sudo su -</code> will do.</p>
 
 <h2>Get the dependencies</h2>
-
-<hr>
 
 <p>We don’t need much dependencies. Only debootstrap and the Arch install scripts for
 convenience.</p>
@@ -73,8 +65,6 @@ convenience.</p>
 </pre></code>
 
 <h2>Formatting and partitioning</h2>
-
-<hr>
 
 <p>Format your drive. I’m not going to go into detail on that one, because there’s a lot of
 different tools that does the job (fdisk, cfdisk, parted, etc) and which one is the best 
@@ -118,8 +108,6 @@ systems), swap, root and home partitions.</p>
 
 <h2>Deboostrap</h2>
 
-<hr>
-
 <p>With the disk partitioned and partitions mounted, we now run the debootstrap command. We
 will need a cli text editor in the chroot to modify some files, so we include one already.
 I use vim, but choose whatever floats your boat.</p>
@@ -130,8 +118,6 @@ I use vim, but choose whatever floats your boat.</p>
 
 <h2>Generate the fstab file</h2>
 
-<hr>
-
 <p>We need to create the fstab file. This is where the Arch install scripts come in handy.
 We’ll be using UUIDs with the -U option, rather than disk labels.</p>
 
@@ -139,8 +125,6 @@ We’ll be using UUIDs with the -U option, rather than disk labels.</p>
 </pre></code>
 
 <h2>Before chrooting</h2>
-
-<hr>
 
 <p>Before we chroot, it's not a bad idea to properly set up apt's sources.list file. You can
 either copy the one from the iso to <code>/mnt/etc/apt/</code>, as long as it has all the proper sections,
@@ -167,8 +151,6 @@ a system which uses it, copy the interfaces file to the chroot.</p>
 
 <h2>Chroot</h2>
 
-<hr>
-
 <p>Now is the time to chroot into the deboostrapped system</p>
 
 <pre><code># arch-chroot /mnt
@@ -177,8 +159,6 @@ a system which uses it, copy the interfaces file to the chroot.</p>
 <p>Then, run <code>apt update</code> for good measure.</p>
 
 <h2>Installing init and the kernel</h2>
-
-<hr>
 
 <p>We need a kernel and init system. This could be done later but I prefer getting it out of
 the way first.</p>
@@ -208,16 +188,12 @@ the way first.</p>
 
 <h2>Set Timezone</h2>
 
-<hr>
-
 <p>Run the follwing command and go through the steps</p>
 
 <pre><code># dpkg-reconfigure tzdata
 </pre></code>
 
 <h2>Networking</h2>
-
-<hr>
 
 <p>This step depends on which networking tool you plan on using. I’ll use ifupdown (I’m a
 simple man, so it’s what I use) as an example.</p>
@@ -253,8 +229,6 @@ iface enp1s0 inet dhcp
 
 <h2>Hostname and hosts file</h2>
 
-<hr>
-
 <p>Choose a hostname for your system and add it to <code>/etc/hostname</code>:</p>
 
 <pre><code># echo "<i>yourhostname</i>" > /etc/hostname
@@ -272,8 +246,6 @@ ff02::2     ip6-allrouters
 </pre></code>
 
 <h2>Locales and keyboard configuration</h2>
-
-<hr>
 
 <ul>
 <li>Install the locales package, then configure</li>
@@ -298,8 +270,6 @@ guides.</p>
 <p>Certain changes to the keymap will only take effect once rebooted into the new install.</p>
 
 <h2>Users, passwords and authentication</h2>
-
-<hr>
 
 <ul>
 <li>Start by creating a password for the root account. You can lock the account later if you
@@ -350,8 +320,6 @@ uncomment it.</p>
 
 <h2>Setting up the bootloader</h2>
 
-<hr>
-
 <p>Here, grub is used. For other bootloaders, see their own documentation.</p>
 
 <ul>
@@ -373,8 +341,6 @@ uncomment it.</p>
 </pre></code>
 
 <h2>Finalizing</h2>
-
-<hr>
 
 <ol>
 <li>Run <code>apt clean</code> for good measure.</li>
