@@ -54,50 +54,35 @@
 
 			<p>wget command:</p>
 
-			<div class="shell">
-				<pre><code>
-$ wget -q -O brave-browser-archive-keyring.gpg \
-    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg</pre></code>
-			</div>
+			<pre><code>$ wget -q -O brave-browser-archive-keyring.gpg \
+    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+</pre></code>
 
 			<p>curl command:</p>
 
-			<div class="shell">
-				<pre><code>
-$ curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
-    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg</pre></code>
-			</div>
+<pre><code>$ curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
+    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+</pre></code>
 
 			<p>Now, move the key to <code>/usr/share/keyrings/</code></p>
 
-			<div class="shell">
-				<pre><code>
-# mv brave-browser-archive-keyring.gpg /usr/share/keyrings/</pre></code>
-			</div>
+<pre><code># mv brave-browser-archive-keyring.gpg /usr/share/keyrings/
+</pre></code>
 
 			<p>Next, ensure that the file has 644 mode bits and is owned by root. This is
 			very important. If the file is still owned by the non-root user, apt will
 			report that no public key for the brave browser was found.</p>
 
-			<div class="shell">
-				<pre><code>
-$ stat -c "%a %g %G" /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
-			</div>
+<pre><code>$ stat -c "%a %g %G" /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
 
 			<p>The output should look like this</p>
 
-			<div class="shell">
-				<pre><code>
-644 0 root</pre></code>
-			</div>
+<pre><code>644 0 root</pre></code>
 
 			<p>If not, change ownership</p>
 
-			<div class="shell">
-				<pre><code>
-# chmod 644 /usr/share/keyrings/brave-browser-archive-keyring.gpg
+<pre><code># chmod 644 /usr/share/keyrings/brave-browser-archive-keyring.gpg
 # chown root:root /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
-			</div>
 
 			<h2>Create DEB822 .sources file</h2>
 
@@ -109,30 +94,21 @@ $ stat -c "%a %g %G" /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre>
 
 			<p><code>/etc/apt/sources.list.d/brave-browser.sources</code> (<a href="../files/brave-browser.sources" target="_blank" rel="noopener noreferrer" download>download</a>)</p>
 
-<div class="shell">
-<pre><code>
-Types: deb
+<pre><code>Types: deb
 URIs: https://brave-browser-apt-release.s3.brave.com/
 Suites: stable
 Components: main
 Signed-by: /usr/share/keyrings/brave-browser-archive-keyring.gpg</pre></code>
-</div>
 
 			<p>Save and move the file to <code>/etc/apt/souces.list.d</code>.</p>
 
-<div class="shell">
-<pre><code>
-# mv brave-browser.sources /etc/apt/sources.list.d/</pre></code>
-</div>
+<pre><code># mv brave-browser.sources /etc/apt/sources.list.d/</pre></code>
 
 			<p>If you'd rather stick to the .list file, simply:</p>
 
-<div class="shell">
-<pre><code>
-$ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" \
+<pre><code>$ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" \
 > brave-browser-release.list
 # mv brave-browser-release.list /etc/apt/sources.list.d/</pre></code>
-</div>
 
 			<p>The ownership note in the prior section also applies to <code>brave-browser.sources</code>
 			(or <code>brave-browser-release.list</code>), so run the same <code>stat</code> command against this file,
@@ -144,10 +120,7 @@ $ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] ht
 
 			<p>Now, all that's left is to update and install Brave</p>
 
-			<div class="shell">
-				<pre><code>
-# apt update && apt install brave-browser</pre></code>
-			</div>
+<pre><code># apt update && apt install brave-browser</pre></code>
 
 			<p>Voila.</p>
 
@@ -166,10 +139,7 @@ $ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] ht
 			using the (better) deb822 format. Either way, no problem, simply remove the
 			file if it exists</p>
 
-<div class="shell">
-<pre><code>
-# if [ -f /etc/apt/trusted.gpg.d/brave-browser-release.gpg ]; then rm /etc/apt/trusted.gpg.d/brave-browser-release.gpg; fi</pre></code>
-</div>
+<pre><code># if [ -f /etc/apt/trusted.gpg.d/brave-browser-release.gpg ]; then rm /etc/apt/trusted.gpg.d/brave-browser-release.gpg; fi</pre></code>
 
 			<h3>Links</h3>
 

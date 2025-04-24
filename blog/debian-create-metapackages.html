@@ -43,21 +43,15 @@ elaborate one containing a postinst script and some special files.</p>
 
 <p>First, install the equivs[1] package:</p>
 
-<div class="shell">
-<pre><code>
-# apt-get install --no-install-recommends -y equivs</code></pre>
-</div>
+<pre><code># apt-get install --no-install-recommends -y equivs</code></pre>
 
 <h2>Basic Template</h2>
 <hr>
 
 <p>Create a working directory and cd into it:</p>
 
-<div class="shell">
-<pre><code>
-$ mkdir mympkg
+<pre><code>$ mkdir mympkg
 $ cd mympkg</code></pre>
-</div>
 
 <p>Next, create a control file. You can use the <code>equivs-control</code> command to
 generate a file automatically and fill out the appropriate fields while
@@ -66,10 +60,7 @@ removing those not needed, or you can create the file manually.</p>
 <p>Create automatically (substitute <code>mypkg_name</code> for whatever you want as
 the name for your metapackage):</p>
 
-<div class="shell">
-<pre><code>
-$ equivs-control mypkg_name</code></pre>
-</div>
+<pre><code>$ equivs-control mypkg_name</code></pre>
 
 <p>Doing it manually isn't that much more complicated. For a basic package
 only a few fields are required.</p>
@@ -77,9 +68,7 @@ only a few fields are required.</p>
 <p>Create/open the <code>mypkg_name</code> control file in your preferred text editor
 and add the following:</p>
 
-<div class="shell">
-<pre><code>
-Package: mypkg_name
+<pre><code>Package: mypkg_name
 Version: 01
 Maintainer: Your Name &lt;your@email.example&gt;
 Architecture: amd64
@@ -93,7 +82,6 @@ Description: Short description
  this.
  .
  This is a new paragraph.</code></pre>
-</div>
 
 <h2>More Elaborate</h2>
 <hr>
@@ -105,9 +93,7 @@ example.</p>
 <p>The following <code>mypkg_name</code> control file example does the same as the basic
 one, but adds a <code>postinst</code> script and a few files to copy over.</p>
 
-<div class="shell">
-<pre><code>
-Package: mypkg_name
+<pre><code>Package: mypkg_name
 Version: 01
 Maintainer: Your Name &lt;your@email.example&gt;
 Architecture: amd64
@@ -124,7 +110,6 @@ Description: Short description
  this.
  .
  This is a new paragraph.</code></pre>
-</div>
 
 <p>Note: All files that you want to add to your metapackage, as well as the
 <code>postinst</code> file should be in the working directory.</p>
@@ -137,15 +122,12 @@ installation and can perform any action you want. For example, you could
 set special permissions to <code>file1</code> and make sure it is owned by a specific
 user:</p>
 
-<div class="shell">
-<pre><code>
-#!/bin/sh
+<pre><code>#!/bin/sh
 
 set -e
 
 chmod 600 /path/to/file1
 chown someuser:someuser /path/to/file1</code></pre>
-</div>
 
 <p>Speaking of file permissions, you could use it to set the permissions of
 various files on the system, not just the ones provided by the metapackage.
@@ -153,9 +135,7 @@ For example, this bit taken from Ragnarok's <code>security-check</code>[2] cronj
 could be used to ensure that a wireless network's <code>interface</code> file is
 only readable by root:</p>
 
-<div class="shell">
-<pre><code>
-#!/bin/sh
+<pre><code>#!/bin/sh
 
 set -e
 
@@ -168,19 +148,15 @@ for _file in $(find /etc/network/interfaces.d/ -type f); do
         printf '%s\n' "${_file}'s permissions are OK."
     fi
 done</code></pre>
-</div>
 
 <p>Or perhaps set your system's default browser (if you have more than one
 installed):</p>
 
-<div class="shell">
-<pre><code>
-#!/bin/sh
+<pre><code>#!/bin/sh
 
 set -e
 
 update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/preferred-browser 100</code></pre>
-</div>
 
 <p>Likewise for your preferred editor, compiler, awk version (mawk,
 original-awk, gawk), etc..</p>
@@ -193,9 +169,7 @@ up.</p>
 the initial installation of your metapackage but not when it is updated,
 you can use an if...else statement:</p>
 
-<div class="shell">
-<pre><code>
-#!/bin/sh
+<pre><code>#!/bin/sh
 
 set -e
 
@@ -203,7 +177,6 @@ if [ -z "$2" ]; then
     # actions to be performed on install
 fi
 </code></pre>
-</div>
 
 <p>In essence, <code>postinst</code> is called with specific arguments (e.g. <code>configure</code>)
 and if "$2" is null, then this is an install, rather than an upgrade.</p>
@@ -215,11 +188,8 @@ and if "$2" is null, then this is an install, rather than an upgrade.</p>
 build the package, by supplying the name of the control file as an argument:
 </p>
 
-<div class="shell">
-<pre><code>
-$ equivs-build mypkg_name
+<pre><code>$ equivs-build mypkg_name
 </code></pre>
-</div>
 
 <h2>Caveat</h2>
 <hr>

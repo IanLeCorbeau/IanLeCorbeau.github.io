@@ -51,22 +51,16 @@
 
 			<p>First, install live-build, create a build directory and cd into it.</p>
 
-<div class="shell">
-<pre><code>
-    # apt install live-build
-    $ mkdir -p .build
-    cd .build
+<pre><code># apt install live-build
+$ mkdir -p .build
+cd .build
 </pre></code>
-</div>
 
 			<p>Next, create a config.</p>
 
-<div class="shell">
-<pre><code>
-    $ lb config -d bookworm --debian-installer live --debian-installer-distribution bookworm \  
-      --archive-areas "main non-free-firmware" --debootstrap-options "--variant=minbase"
+<pre><code>$ lb config -d bookworm --debian-installer live --debian-installer-distribution bookworm \  
+  --archive-areas "main non-free-firmware" --debootstrap-options "--variant=minbase"
 </pre></code>
-</div>
 
 			<p>This will generate the necessary files for a minimal Bookworm iso. There are much more
 config options available, and they are well documented in the lb_config manpage[1].</p>
@@ -83,22 +77,20 @@ config options available, and they are well documented in the lb_config manpage[
 			manager or desktop environment, packages you need, as well as your dotfiles.</p>
 
 			<h3>Add packages</h3>
+			<hr>
 
 			<p>Create a file named pkgs.list.chroot which should be saved to config/package-lists/. Add
 			the name of the packages you wish to have in the iso. This needs to be a list separated
 			by white-spaces, or each package on a new live, e.g.</p>
 
-<div class="shell">
-<pre><code>
-    xserver-xorg-core
-    xinit
-    xwallpaper
-    cwm
-    vim
-    tmux
-    vifm
+<pre><code>xserver-xorg-core
+xinit
+xwallpaper
+cwm
+vim
+tmux
+vifm
 </pre></code>
-</div>
 
 			<p>Example pkgs.list.chroot file:<br>
 			<a href="https://github.com/IanLeCorbeau/debian-live-build/blob/main/config/package-lists/pkgs.list.chroot" target="_blank" rel="noopener noreferrer">
@@ -114,14 +106,12 @@ config options available, and they are well documented in the lb_config manpage[
 			missing from the finished iso.</p>
 
 			<h3>Add your dotfiles</h3>
+			<hr>
 
 			<p>Create a skeleton directory in config/includes.chroot_after_packages:</p>
 
-<div class="shell">
-<pre><code>
-    $ mkdir -p config/includes.chroot_after_packages/etc/skel
+<pre><code>$ mkdir -p config/includes.chroot_after_packages/etc/skel
 </pre></code>
-</div>
 
 			<p>Then copy all your dotfiles over. The etc/skel directory should contain all files that
 			will be copied to the live user's home directory, so its structure is the same. This
@@ -137,23 +127,21 @@ config options available, and they are well documented in the lb_config manpage[
 			<p>At this point, you could build the iso, or customize further using hooks.</p>
 
 			<h3>Hooks</h3>
+			<hr>
 
 			<p>Hooks are just shell scripts where you run any command needed to tweak the live system.</p>
 
 			<p>For example</p>
 
-<div class="shell">
-<pre><code>
-    #!/bin/sh
+<pre><code>#!/bin/sh
 
-    set -e&nbsp;&nbsp;&nbsp;&nbsp;# use set -e so that build fails in case of error
+set -e&nbsp;&nbsp;&nbsp;&nbsp;# use set -e so that build fails in case of error
 
-    sed -i '15 s/^# //' /etc/pam.d/su
-    addgroup --system wheel
-    touch /etc/doas.conf
-    echo "permit :wheel" > /etc/doas.conf
+sed -i '15 s/^# //' /etc/pam.d/su
+addgroup --system wheel
+touch /etc/doas.conf
+echo "permit :wheel" > /etc/doas.conf
 </pre></code>
-</div>
 
 			<p>This would essentially enable the wheel group and configure doas on the live system.</p>
 
@@ -164,6 +152,7 @@ config options available, and they are well documented in the lb_config manpage[
 			<a href="https://github.com/RagnarokOS/iso/blob/main/config/hooks/normal/0002-buildsrc.hook.chroot" target="_blank" rel="noopener noreferrer">https://github.com/RagnarokOS/iso/blob/main/config/hooks/normal/0002-buildsrc.hook.chroot</a></p>
 
 			<h3>Boot time hooks</h3>
+			<hr>
 
 			<p>Because the live user is only created when the iso boots, there are certain customizations
 			that can't be done with normal hooks, e.g. changing the live user's password. Modifications
@@ -180,22 +169,16 @@ config options available, and they are well documented in the lb_config manpage[
 
 			<p>Once you're reasonably satisfied with your configuration, you can build the iso, by running:</p>
 
-<div class="shell">
-<pre><code>
-    # lb build
+<pre><code># lb build
 </pre></code>
-</div>
 
 			<p>This may take a while depending on network speed and the amount of packages added. If the
 			build fails, don't sweat it. In my experience, live-build can be a bit, let's say, capricious. Other times, a simple typo or inadvertent misconfiguration can cause seemingly random
 			issues. Carefully read <code>lb build</code>'s output to investigate any problem. You could even save
 			the output to a log file using</p>
 
-<div class="shell">
-<pre><code>
-    # lb build 2>&1 | tee build-log.txt
+<pre><code># lb build 2>&1 | tee build-log.txt
 </pre></code>
-</div>
 
 			<p>It may take several tries before the build is both successful, and accurate. Patience is
 			most definitely required.</p>
@@ -205,16 +188,14 @@ config options available, and they are well documented in the lb_config manpage[
 			at config time).</p>
 
 			<h3>Subsequent rebuilds</h3>
+			<hr>
 
 			<p>To rebuild the iso, run:</p>
 
-<div class="shell">
-<pre><code>
-    # lb clean
-    $ lb config
-    # lb build
+<pre><code># lb clean
+$ lb config
+# lb build
 </pre></code>
-</div>
 
 <p>It is not necessary to run <code>lb config</code> with all options when simply doing a rebuild.</p>
 
@@ -235,11 +216,8 @@ not to track the files produced by the <code>lb config</code> command, besides t
 <code>lb config</code> command will not overwrite these files unless an option is specified. For
 example, if you want to modify the name of the resulting iso:</p>
 
-<div class="shell">
-<pre><code>
-    $ lb config --image-name <i>customname-live</i>
+<pre><code>$ lb config --image-name <i>customname-live</i>
 </pre></code>
-</div>
 
 <h2>Final thoughts</h2>
 

@@ -81,23 +81,17 @@ first try but the system booted for some reason. Hence the unpredictable factor.
 
 <p>If doing a deboostrap install, right before installing the kernel, simply do a:</p>
 
-<div class="shell">
-<pre><code>
-# apt install sysvinit-core sysv-rc orphan-sysvinit-scripts elogind libpam-elogind
+<pre><code># apt install sysvinit-core sysv-rc orphan-sysvinit-scripts elogind libpam-elogind
 </code></pre>
-</div>
 
 <p>For a netinstall, the process is still simple, just split in stages:</p>
 
-<div class="shell">
-<pre><code>
-# apt install sysvinit-core sysv-rc orphan-sysvinit-scripts
+<pre><code># apt install sysvinit-core sysv-rc orphan-sysvinit-scripts
 # reboot (and cross fingers)
 # apt install elogind libpam-elogind
 # reboot
 # profit
 </code></pre>
-</div>
 
 <p>As simple as that.</p>
 
@@ -122,11 +116,8 @@ listen on any port (nor localhost) by default, a big plus for security. They bot
 work perfectly without any configuration needed. Just set mailname to your hostname and
 leave everything else blank when prompted while installing dma.</p>
 
-<div class="shell">
-<pre><code>
-# apt install rsyslog bsd-mailx dma
+<pre><code># apt install rsyslog bsd-mailx dma
 </code></pre>
-</div>
 
 <h2>Bonus Init Script</h2>
 
@@ -140,9 +131,7 @@ as to why you might want that are given in the link at the end.</p>
 	https://raw.githubusercontent.com/RagnarokOS/src/master/etc/init.d/rm-machineid</a>
 </p>
 
-<div class="shell">
-<pre><code>
-#!/bin/sh
+<pre><code>#!/bin/sh
 ### BEGIN INIT INFO
 # Provides:             rm-machineid
 # Required-Start:
@@ -174,19 +163,15 @@ case "$1" in
     *)  do_stop ;;
 esac
 </code></pre>
-</div>
 
 <p>Either copy this in your favorite text editor, or download the script and put it in the
 <code>/etc/init.d/</code> directory.</p>
 
 <p>Afterwards, as root:</p>
 
-<div class="shell">
-<pre><code>
-# chmod 755 /etc/init.d/rm-machineid
+<pre><code># chmod 755 /etc/init.d/rm-machineid
 # update-rc.d rm-machineid defaults
 </code></pre>
-</div>
 
 <p>...and that is all.</p>
 

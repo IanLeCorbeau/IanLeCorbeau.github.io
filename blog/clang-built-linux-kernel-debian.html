@@ -77,8 +77,9 @@
 			to ensure that it worked on as many setups as Debian's version.</p>
 
 			<p>You can inspect Ragnarok's .config file which is located in the kernel-build
-			reposotiry here:
-			<a href="https://github.com/RagnarokOS/kernel-build/blob/master/ragnarok.conf">https://github.com/RagnarokOS/kernel-build/blob/master/ragnarok.conf</a></p>
+			reposotiry here:</p>
+
+			<p><a href="https://github.com/RagnarokOS/kernel-build/blob/master/ragnarok.conf">https://github.com/RagnarokOS/kernel-build/blob/master/ragnarok.conf</a></p>
 
 			<p>You can also inspect the config.diff file from the same repository, which
 			highlights the differences between the two kernels. Furthermore, once booted
@@ -109,29 +110,21 @@
 
 			<p>First, debootstrap a 'buildd' variant of Debian Bookworm:</p>
 
-			<div class="shell">
-				<pre><code>
-# apt-get install debootstrap
+<pre><code># apt-get install debootstrap
 $ mkdir -p build/kernel
 # deboostrap --variant=buildd bookworm build/kernel http://deb.debian.org/debian/</pre></code>
-			</div>
 
 			<p>Next, avoid running <code>git clone</code> as the root user (even if it would be in
 			a chroot) by cloning then moving the repo:</p>
 
-			<div class="shell">
-				<pre><code>
-$ cd build/
+<pre><code>$ cd build/
 $ git clone https://github.com/RagnarokOS/kernel-build.git
 # mv kernel-build kernel/usr/src/</pre></code>
-			</div>
 
 			<p>While still in the build directory, change root to the kernel directory:</p>
 
-			<div class="shell">
-				<pre><code>
-# chroot kernel/</pre></code>
-			</div>
+			
+<pre><code># chroot kernel/</pre></code>
 
 			<p>Add the LLVM repo as highlighted in the linked post above, then run the llvmsetup.sh
 			script located in the kernel-build repo:</p>
@@ -139,40 +132,32 @@ $ git clone https://github.com/RagnarokOS/kernel-build.git
 			<p><i>Note: if you chose to install LLVM 17 or 18, open the script and replace
 				VERSION=16 with the version of your choice</i></p>
 
-			<div class="shell">
-				<pre><code>
-/usr/src/kernel-build/llvmsetup.sh</pre></code>
-			</div>
+			
+<pre><code>/usr/src/kernel-build/llvmsetup.sh</pre></code>
 
 			<p>Install the linux-source package and its build dependencies, extract the
 			tarball, copy the Ragnarok config file and cd into the linux-source-*
 			directory:</p>
 
-			<div class="shell">
-				<pre><code>
-# apt-get install linux-source
+			
+<pre><code># apt-get install linux-source
 # apt-get build-dep linux
 # cd /usr/src
 # tar xvf linux-source-*.tar.xz
 # cp kernel-build/ragnarok.conf linux-source-*/.config
 # cd linux-source-*</pre></code>
-			</div>
 
 			<p>Run make oldconfig to make sure the config is up to date. 90% of the
 			time nothing new will be added, but sometimes it does happen. </p>
 
-			<div class="shell">
-				<pre><code>
-# make CC=clang LLVM=1 oldconfig</pre></code>
-			</div>
+			
+<pre><code># make CC=clang LLVM=1 oldconfig</pre></code>
 
 			<p>Now, just start compiling/building the package and be aware that this
 			builds a distribution kernel, so it will take some time.</p>
 
-			<div class="shell">
-				<pre><code>
-# make CC=clang LLVM=1 -j$(nproc) bindeb-pkg</pre></code>
-			</div>
+			
+<pre><code># make CC=clang LLVM=1 -j$(nproc) bindeb-pkg</pre></code>
 
 			<p>When done, the linux-image, linux-headers and linux-libc-dev can be moved
 			out of the chroot and installed with either <code>dpkg -i</code> or <code>apt-get install</code>

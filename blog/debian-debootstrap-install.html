@@ -69,11 +69,8 @@ type sudo. If the root account is locked, just typing <code>sudo su</code> or <c
 <p>We don’t need much dependencies. Only debootstrap and the Arch install scripts for
 convenience.</p>
 
-<div class="shell">
-<pre><code>
-    # apt update && apt install debootstrap arch-install-scripts -y
+<pre><code># apt update && apt install debootstrap arch-install-scripts -y
 </pre></code>
-</div>
 
 <h2>Formatting and partitioning</h2>
 
@@ -93,37 +90,31 @@ systems), swap, root and home partitions.</p>
 <li>On EFI systems:</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # mkfs.fat -F 32 /dev/sdX1
-    # mkswap /dev/sdX2
-    # swapon /dev/sdX2
-    # mkfs.ext4 /dev/sdX3
-    # mkfs.ext4 /dev/sdX4
+<pre><code># mkfs.fat -F 32 /dev/sdX1
+# mkswap /dev/sdX2
+# swapon /dev/sdX2
+# mkfs.ext4 /dev/sdX3
+# mkfs.ext4 /dev/sdX4
 
-    # mount /dev/sdX3 /mnt
-    # mkdir -p /mnt/{boot,home}
-    # mount /dev/sdX1 /boot/efi
-    # mount /dev/sdX4 /mnt/home
+# mount /dev/sdX3 /mnt
+# mkdir -p /mnt/{boot,home}
+# mount /dev/sdX1 /boot/efi
+# mount /dev/sdX4 /mnt/home
 </pre></code>
-</div>
 
 <ul>
 <li>On legacy/bios systems:</li>
 </ul>
 
-<div class="shell">
- <pre><code>
-    # mkswap /dev/sdX1
-    # swapon /dev/sdX1
-    # mkfs.ext4 /dev/sdX2
-    # mkfs.ext4 /dev/sdX3
+<pre><code># mkswap /dev/sdX1
+# swapon /dev/sdX1
+# mkfs.ext4 /dev/sdX2
+# mkfs.ext4 /dev/sdX3
 
-    # mount /dev/sdX2 /mnt
-    # mkdir -p /mnt/home
-    # mount /dev/sdX3 /mnt/home
+# mount /dev/sdX2 /mnt
+# mkdir -p /mnt/home
+# mount /dev/sdX3 /mnt/home
 </pre></code>
-</div>
 
 <h2>Deboostrap</h2>
 
@@ -133,12 +124,9 @@ systems), swap, root and home partitions.</p>
 will need a cli text editor in the chroot to modify some files, so we include one already.
 I use vim, but choose whatever floats your boat.</p>
 
-<div class="shell">
-<pre><code>
-    # /usr/sbin/debootstrap --variant=minbase --include=vim bookworm \
-    # /mnt http://deb.debian.org/debian/
+<pre><code># /usr/sbin/debootstrap --variant=minbase --include=vim bookworm \
+# /mnt http://deb.debian.org/debian/
 </pre></code>
-</div>
 
 <h2>Generate the fstab file</h2>
 
@@ -147,11 +135,8 @@ I use vim, but choose whatever floats your boat.</p>
 <p>We need to create the fstab file. This is where the Arch install scripts come in handy.
 We’ll be using UUIDs with the -U option, rather than disk labels.</p>
 
-<div class="shell">
-<pre><code>
-    # genfstab -U /mnt >> /mnt/etc/fstab
+<pre><code># genfstab -U /mnt >> /mnt/etc/fstab
 </pre></code>
-</div>
 
 <h2>Before chrooting</h2>
 
@@ -162,27 +147,21 @@ either copy the one from the iso to <code>/mnt/etc/apt/</code>, as long as it ha
 or, create the file with your preferred cli text editor. A good <code>/etc/apt/sources.list</code>
 file for Debian Bookworm:</p>
 
-<div class="shell">
-<pre><code>
-    deb http://deb.debian.org/debian/ bookworm main non-free-firmware
-    deb-src http://deb.debian.org/debian/ bookworm main non-free-firmware
+<pre><code>deb http://deb.debian.org/debian/ bookworm main non-free-firmware
+deb-src http://deb.debian.org/debian/ bookworm main non-free-firmware
 
-    deb http://security.debian.org/debian-security bookworm-security main non-free-firmware
-    deb-src http://security.debian.org/debian-security bookworm-security main non-free-firmware
+deb http://security.debian.org/debian-security bookworm-security main non-free-firmware
+deb-src http://security.debian.org/debian-security bookworm-security main non-free-firmware
 
-    deb http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
-    deb-src http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
+deb http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
+deb-src http://deb.debian.org/debian/ bookworm-updates main non-free-firmware
 </pre></code>
-</div>
 
 <p>If you’re planning on using ifupdown as your networking tool, and you’re doing this from
 a system which uses it, copy the interfaces file to the chroot.</p>
 
-<div class="shell">
-<pre><code>
-    # cp /etc/network/interfaces /mnt/etc/network/interfaces
+<pre><code># cp /etc/network/interfaces /mnt/etc/network/interfaces
 </pre></code>
-</div>
 
 <p>Do the same for the <code>/etc/network/interfaces.d/</code> directory if it contains any files.</p>
 
@@ -192,11 +171,8 @@ a system which uses it, copy the interfaces file to the chroot.</p>
 
 <p>Now is the time to chroot into the deboostrapped system</p>
 
-<div class="shell">
-<pre><code>
-    # arch-chroot /mnt
+<pre><code># arch-chroot /mnt
 </pre></code>
-</div>
 
 <p>Then, run <code>apt update</code> for good measure.</p>
 
@@ -211,31 +187,22 @@ the way first.</p>
 <li>For systemd:</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # apt instal systemd systemd-sysv libpam-systemd libsystemd0
+<pre><code># apt instal systemd systemd-sysv libpam-systemd libsystemd0
 </pre></code>
-</div>
 
 <ul>
 <li>For sysvinit:</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # apt install sysvinit-core sysv-rc orphan-sysvinit-scripts elogind libpam-elogind
+<pre><code># apt install sysvinit-core sysv-rc orphan-sysvinit-scripts elogind libpam-elogind
 </pre></code>
-</div>
 
 <ul>
 <li>Install the kernel:</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # apt install linux-image-amd64
+<pre><code># apt install linux-image-amd64
 </pre></code>
-</div>
 
 <p>Swap <code>amd64</code> for another architecture if you need.</p>
 
@@ -245,11 +212,8 @@ the way first.</p>
 
 <p>Run the follwing command and go through the steps</p>
 
-<div class="shell">
-<pre><code>
-    # dpkg-reconfigure tzdata
+<pre><code># dpkg-reconfigure tzdata
 </pre></code>
-</div>
 
 <h2>Networking</h2>
 
@@ -262,11 +226,8 @@ simple man, so it’s what I use) as an example.</p>
 <li>Using ifupdown (remove wpasupplicant if wifi is not needed):</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # apt install ifupdown wpasupplicant
+<pre><code># apt install ifupdown wpasupplicant
 </pre></code>
-</div>
 
 <p>Next, if you couldn't copy <code>/etc/network/interfaces</code> to the chroot because it was missing,
 you will need to create the proper file. You can refer to my ifupdown guide[2] on how to
@@ -277,19 +238,16 @@ dynamic IP address.</p>
 <p>Find your interface's name with the <code>find /sys/class/net</code> command. Wired networks usually
 start with <code>enp</code> (eg. <code>enp1s0</code>). Then create <code>/etc/network/interfaces</code>, and add:</p>
 
-<div class="shell">
-<pre><code>
-    source /etc/network/interfaces.d/*
+<pre><code>source /etc/network/interfaces.d/*
 
-    # The loopback <i>network-interface</i>
-    auto lo
-    iface lo inet loopback
+# The loopback <i>network-interface</i>
+auto lo
+iface lo inet loopback
 
-    # The primary <i>network-interface</i>
-    allow-hotplug enp1s0
-    iface enp1s0 inet dhcp
+# The primary <i>network-interface</i>
+allow-hotplug enp1s0
+iface enp1s0 inet dhcp
 </pre></code>
-</div>
 
 <p>Subsitute <code>network-interface</code> with your interface's name.</p>
 
@@ -299,25 +257,19 @@ start with <code>enp</code> (eg. <code>enp1s0</code>). Then create <code>/etc/ne
 
 <p>Choose a hostname for your system and add it to <code>/etc/hostname</code>:</p>
 
-<div class="shell">
-<pre><code>
-    # echo "<i>yourhostname</i>" > /etc/hostname
+<pre><code># echo "<i>yourhostname</i>" > /etc/hostname
 </pre></code>
-</div>
 
 <p>Now, fill <code>/etc/hosts</code> with the following:</p>
 
-<div class="shell">
-<pre><code>
-    127.0.0.1   localhost
-    127.0.1.1   <i>yourhostname</i>
+<pre><code>127.0.0.1   localhost
+127.0.1.1   <i>yourhostname</i>
 
-    # IPv6
-    ::1         localhost ip6-localhost ip6-loopback
-    ff02::1     ip6-allnodes
-    ff02::2     ip6-allrouters
+# IPv6
+::1         localhost ip6-localhost ip6-loopback
+ff02::1     ip6-allnodes
+ff02::2     ip6-allrouters
 </pre></code>
-</div>
 
 <h2>Locales and keyboard configuration</h2>
 
@@ -327,23 +279,17 @@ start with <code>enp</code> (eg. <code>enp1s0</code>). Then create <code>/etc/ne
 <li>Install the locales package, then configure</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # apt install locales
-    # dpkg-reconfigure locales
+<pre><code># apt install locales
+# dpkg-reconfigure locales
 </pre></code>
-</div>
 
 <ul>
 <li>Configure the keyboard if you're not going to use the default 'us' keymap:</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # apt install console-setup
-    # dpkg-reconfigure keyboard-configuration
+<pre><code># apt install console-setup
+# dpkg-reconfigure keyboard-configuration
 </pre></code>
-</div>
 
 <p>You may not want to run dpkg-reconfigure keyboard-configuration. I find it more trouble
 than it’s worth and it seems to me like it is not required, though it’s mentioned in most
@@ -360,32 +306,23 @@ guides.</p>
 don't plan on using it with the <code>passwd -l root</code> command.</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # passwd
+<pre><code># passwd
 </pre></code>
-</div>
 
 <ul>
 <li>Setting up your default user:</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # useradd -m username
-    # passwd username
+<pre><code># useradd -m username
+# passwd username
 </pre></code>
-</div>
 
 <p>Add the user to necessary groups, and give it the proper interactive shell. Debian uses
 bash as its default interactive shell, but you can choose whatever you like.</p>
 
-<div class="shell">
-<pre><code>
-    # usermod -aG cdrom,floppy,audio,dip,video,plugdev,netdev username
-    # usermod -s /bin/bash username
+<pre><code># usermod -aG cdrom,floppy,audio,dip,video,plugdev,netdev username
+# usermod -s /bin/bash username
 </pre></code>
-</div>
 
 <ul>
 <li>Next, you need to decide if you want sudo or doas in order to elevate your user’s
@@ -394,21 +331,15 @@ privileges for updates, etc… This is your choice, though I personally prefer d
 
 <p>For doas:</p>
 
-<div class="shell">
-<pre><code>
-    # apt install opendoas
-    # echo "permit <i>username</i>" > /etc/doas.conf
+<pre><code># apt install opendoas
+# echo "permit <i>username</i>" > /etc/doas.conf
 </pre></code>
-</div>
 
 <p>For sudo:</p>
 
-<div class="shell">
-<pre><code>
-    # apt install sudo
-    # usermod -aG sudo <i>username</i>
+<pre><code># apt install sudo
+# usermod -aG sudo <i>username</i>
 </pre></code>
-</div>
 
 <p>Debian provides a pre-configured sudoers file, and you probably don’t need to change
 anything, but it’s wise to verify that the line under “allow members of group sudo …”
@@ -427,25 +358,19 @@ uncomment it.</p>
 <li>For EFI systems</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # apt install grub-efi-amd64
-    # grub-install --target=x86_64-efi --efi-directory=/boot/efi
-    # update-grub
+<pre><code># apt install grub-efi-amd64
+# grub-install --target=x86_64-efi --efi-directory=/boot/efi
+# update-grub
 </pre></code>
-</div>
 
 <ul>
 <li>For bios/legacy systems</li>
 </ul>
 
-<div class="shell">
-<pre><code>
-    # apt install grub-pc
-    # grub-install /dev/sdX
-    # update-grub
+<pre><code># apt install grub-pc
+# grub-install /dev/sdX
+# update-grub
 </pre></code>
-</div>
 
 <h2>Finalizing</h2>
 
