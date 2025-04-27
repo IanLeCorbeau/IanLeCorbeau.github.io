@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="keywords" content="switch to Gentoo, portage, emerge, virtual machines, Gentoo, binpkgs, usepkgs, USE flags">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../rss.html">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+<h1>Tip: Switching to Gentoo? Start in a Virtual Machine</h1>
+
+<p>Considering the type of Linux user that I am, Gentoo has always seemed
+like the perfect match. However, it took me a few years to finally make
+the switch. There's a few reasons for that, but the main one is pretty
+simple: I can not afford having my daily driver inoperable for more than
+a few hours at a time.</p>
+
+<p>After switching to Gentoo, I can safely say that using and maintaining it
+is no more time consuming than any other distribution, but installing it
+is another story. How long it takes to install depends on how you configure
+your system, and since I tweaked a lot of stuff (which includes using LLVM
+as the default toolchain, and gcc as a fallback) it goes without saying
+that in my case, an install would take at least a day.</p>
+
+<p>So how did I manage to finally switch to Gentoo? Easy: I started in a VM.</p>
+
+<h2>The Logic</h2>
+
+<p>As I mentioned above, I can't have my daily driver stay in an inoperable state
+for a whole day, nor do I have the time to spend a whole day installing a
+system. If you're not in that situation, or if you plan on installing on a
+secondary device, then it may not be worth your while to do this in a VM first.
+Likewise, you could stick to defaults and use Gentoo's pre-built binaries if you
+don't need to have any special configuration and <code>USE</code> flags.</p>
+
+<p>In any case, the point is simple: configuring the whole system (+ kernel) and
+building packages in a Virtual Machine allowed me to do it in my free time and
+it didn't matter how long it would take.</p>
+
+<p>So, how did I go about it?</p>
+
+<h2>The Process</h2>
+
+<p>This is nothing special. Install the system following the
+<a href="https://wiki.gentoo.org/wiki/Handbook:AMD64">handbook</a>, just like you would on
+bare metal. Configure portage to your liking, and make sure the <code>buildpkg</code> feature
+is enabled (it should be enabled by default). With <code>FEATURE=buildpkg</code>, every
+software you install with <code>emerge</code> will be saved to <code>/var/cache/binpkgs</code> (or
+wherever you tell portage to save your packages) in the <code>.gpkg.tar</code> format.</p>
+
+<p>Building packages is the real time saver here, but note that you won't be able
+to use the <code>-march=native</code> compile flag. When you're done installing, configuring
+and building packages, save all your config files (don't forget the @world file as
+well), and create a tarball of <code>/var/cache/binpkgs</code>, e.g.</p>
+
+<pre><code># cd /var/cache/binpkgs
+# tar czvf ../binpkgs.tgz .
+</code></pre>
+
+<p>This will save the tarball to <code>/var/cache</code>.</p>
+
+<p>When you're ready to install on bare metal, proceed with the installation. When
+you reach the
+<a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Stage#Configuring_compile_options">Configuring compile options</a>
+step, copy your configs to the appropriate directories. Next, when you reach the
+<a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Base#Optional:_Updating_the_.40world_set">Optional: Updating the @world set</a>
+phase, extract <code>binpkgs.tgz</code>:</p>
+
+<pre><code># mkdir -p /var/cache/binpkgs
+# tar xzvf /path/to/binpkgs.tgz -C /var/cache/binpkgs
+</code></pre>
+
+<p>Then, just to be 100% sure, run</p>
+
+<pre><code># emaint -f binhost
+</code></pre>
+
+<p>This command ensures that the <code>Packages</code> file is updated to contain all packages
+in <code>binpkgs</code>. If you installed <code>app-portage/mirrorselect</code> first, for example,
+then this step is mandatory. Remember this command, because if you ever decide
+to build packages on another system (be it a VM or other computer) and copy them
+to your main system, you will need to run it before updating.</p>
+
+<p>Afterwards, emerge @world with the proper flags</p>
+
+<pre><code># emerge -avuDN --with-bdeps=y --usepkg @world
+</code></pre>
+
+<p>Depending on how many packages you have in <code>world</code>, it may take a while, but
+nowhere near as long as if you had to compile everything. Take note that
+<code>--usepkg</code> will prefer ebuilds over binpkgs if a newer version of a package is
+available, which means some packages may be compiled instead. You could use the
+<code>--usepkgonly</code> flag instead, but I strongly discourage it, because you'll still
+have to update those packages afterwards anyway.</p>
+
+<p>If you want to avoid rebuilding packages as much as possible, make sure to emerge
+@world in your VM before creating <code>binpkgs.tgz</code> and rest assured that the update
+frequency on Gentoo sits somewhere in between Debian and Arch, which means that
+unless you have a ton of packages, you probably won't have to rebuild too many
+packages even if you waited a day or two before doing your final install.</p>
+
+<h2>About the Kernel</h2>
+
+<p>The <code>binpkgs</code> feature will not build a package for the kernel, however. If you
+choose to configure your own kernel, you can create a "release" tarball by using
+the <code>dir-pkg</code> Make option:</p>
+
+<pre><code># make -j$(nproc) dir-pkg
+[...wait for compilation to finish]
+# cd tar-install
+# tar czvf ../linux-${VERSION}.tgz --sort=name *
+</code></pre>
+
+<p>To install the kernel to your main system, extract the tarball and copy the
+contents of <code>boot</code> to your boot directory, and the directory in <code>lib/modules</code>
+(e.g. 6.12.21-gentoo) to <code>/usr/lib/modules</code>.</p>
+
+<p>You can find more details here (though using <code>kmake</code> is not necessary): <br>
+<a href="https://wiki.gentoo.org/wiki/Kernel/Building_from_userspace#Packaging_a_kernel_for_use_on_another_host">https://wiki.gentoo.org/wiki/Kernel/Building_from_userspace#Packaging_a_kernel_for_use_on_another_host</a></p>
+
+<h2>Closing thoughts</h2>
+
+<p>This may not be the traditional method to install Gentoo, but it does save you a
+lot of time during installation. One added benefit is that you can experiment as
+much as you please, and risk breaking the system, without issues. Of course, I
+advise to clone your VM once you have a basic/working install in order to avoid
+having to reinstall if you go too far.</p>
+
+<p><em>Note: cloning VMs shouldn't be used as an excuse to avoid fixing issues that
+might occur during experimentation. Fixing a system rather than reinstalling is
+a skill that can save your behind in the future.</em></p>
+
+<p>If you're interested in seeing how far Gentoo can be configured, have a look at
+the <code>etc/portage/</code> directory in Ragnarok's src repository:
+<a href="https://github.com/RagnarokOS/src/tree/master/etc/portage">https://github.com/RagnarokOS/src/tree/master/etc/portage</a>.</p>
+		</div>
+
+		<div class="footer">
+			&copy; 2023-2024 Ian LeCorbeau
+		</div>
+	</body>
+</html>

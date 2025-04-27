@@ -115,6 +115,12 @@ hr {
 	border-bottom: 1px dotted rgb(128,128,128);
 }
 
+/*
+.post p {
+	max-width: 80ch;
+}
+*/
+
 a {
 	overflow: hidden;
 	text-decoration: none;
