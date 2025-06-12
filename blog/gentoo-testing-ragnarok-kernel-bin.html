@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="author" content="Ian LeCorbeau">
+		<meta name="description" content="Advice and rants about Unix, strength training, and other stuff">
+		<meta name="keywords" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="../icon.png" type="image/x-icon">
+		<link rel="canonical" href="IanLeCorbeau.github.io">
+		<link rel="stylesheet" href="../css/style.css" type="text/css" media="all">
+		<title>Ian LeCorbeau</title>
+	</head>
+
+	<body>
+
+		<div class="head">
+			<a href="../index.html" class="logo">Ian LeCorbeau</a>
+			<div class="head-right">
+				<a href="../index.html">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="blog.html">Blog</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../rss.html">Rss</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="../contact.html">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="https://www.paypal.com/donate/?hosted_button_id=PLEE2F9FFNJM8" target="_blank" rel="noopener noreferrer">Donate</a>
+			</div>
+		</div>
+		<div class="post">
+<h1>[Gentoo] Testing the Ragnarok Kernel (-bin ebuild)</h1>
+
+<p>The adventurous and security-minded Gentoo users (or future Gentoo users)
+may be interested in testing the <a href="https://github.com/RagnarokOS">Ragnarok</a>
+project's Kernel build.</p>
+
+<p>This is a pre-built kernel, built with LLVM/Clang, ThinLTO, and enables
+multiple hardening options (some of which most distributions refuse to
+enable for one reason or the other), including
+<a href="https://clang.llvm.org/docs/ControlFlowIntegrity.html">Control Flow Integrity</a>.
+It uses the
+<a href="https://packages.gentoo.org/packages/sys-kernel/gentoo-sources">sys-kernel/gentoo-sources</a>
+package as a source, and gets updated as soon as possible after it
+(usually within a few hours).</p>
+
+<p>Mind you, I've been running this kernel on three machines ever since I
+moved to Gentoo (and before that, the same basic config with a custom
+kernel on Debian) and have yet to encounter an issue. However, there
+are so many different computers/hardware configurations out there that
+it can't be guaranteed to work absolutely everywhere. So if you're
+interested in helping out, you can report any issue in the
+<a href="https://github.com/RagnarokOS/kernel-build/issues">kernel-build repository issue tracker</a>.</p>
+
+<p><em>One caveat: this kernel enforces modules signing. This means that out-of-tree
+modules (eg NVIDIA), which aren't signed at build time, won't load.</em> This
+can be remedied by compiling the kernel from source and use your own cert
+to sign these modules (more details later on).</p>
+
+<h2>Prerequisites</h2>
+
+<p>First things first, the ebuild depends on the classic /boot partition
+and won't work if you use /efi instead. If you think that the <code>/efi</code>
+directory should be supported, open an issue in the kernel-build
+repository and I will gladly oblige if enough people ask for it.
+Same applies for supporting not having <code>/boot</code> as a separate partition.</p>
+
+<p>Next, ensure that the following packages are installed:</p>
+
+<ul>
+<li>app-eselect/eselect-repository</li>
+<li>dev-vcs/git</li>
+<li>app-crypt/signify</li>
+</ul>
+
+<p>More details as to why <a href="https://ragnarokos.github.io/man/signify.1.html">signify(1)</a>
+will be needed will be given in a future post.</p>
+
+<p>Also ensure that you have a means to create an
+<a href="https://wiki.gentoo.org/wiki/Initramfs">initramfs</a>.
+While dracut is the recommended tool (and automatic initramfs generation
+using it will soon be possible by enabling the <code>dracut</code> <code>USE</code> flag),
+any other method will also work.</p>
+
+<h2>Add the PGP Key</h2>
+
+<p>Grab my public OpenPGP key:</p>
+
+<p><a href="https://raw.githubusercontent.com/RagnarokOS/src/refs/heads/master/usr/share/openpgp-keys/lecorbeau.asc">https://raw.githubusercontent.com/RagnarokOS/src/refs/heads/master/usr/share/openpgp-keys/lecorbeau.asc</a></p>
+
+<p>Place it in <code>/usr/share/openpgp-keys/</code>.</p>
+
+<p>Note: every once in a while, you may want to sync the repository and run
+<code>emerge -av sec-keys/ragnarok-keys</code>. This ebuild will provide Ragnarok's
+public signify and pgp keys. If emerge fails, it simply means that the
+ebuild isn't ready yet.</p>
+
+<h2>Add Ragnarok's ebuild Repo</h2>
+
+<p>Add Ragnarok's ebuild repository to <code>/etc/portage/repos.conf/eselect-repo.conf</code>:</p>
+
+<pre><code>[ragnarok]  
+location = /var/db/repos/ragnarok  
+auto-sync = yes  
+sync-type = git  
+sync-uri = https://github.com/RagnarokOS/pkgs.git  
+sync-depth = 1  
+sync-git-verify-commit-signature = true  
+sync-openpgp-key-path = /usr/share/openpgp-keys/lecorbeau.asc  
+sync-openpgp-key-refresh = false  
+</code></pre>
+
+<p>Run the following commands to enable and sync the repo:</p>
+
+<pre><code># eselect-repository enable ragnarok
+# emaint sync -r ragnarok
+</code></pre>
+
+<p>Note: when syncing the repo, you will get a warning related to <code>key-refresh</code>
+being set to false in <code>eselect-repo.conf</code>. I cannot set up WKD yet, and
+considering that I prefer Signify, I'm not sold on using WKD so far.</p>
+
+<h2>Install</h2>
+
+<p>Ensure that <code>/boot</code> is mounted, then:</p>
+
+<pre><code># emerge -av sys-kernel/linux-ragnarok-bin
+</code></pre>
+
+<p>Afterwards, generate a new initramfs, eg.</p>
+
+<pre><code># dracut --kver=${PVR}-ragnarok
+</code></pre>
+
+<p>Replace <code>${PVR}</code> with the ebuild version.</p>
+
+<p>Then update your bootloader config, eg.</p>
+
+<pre><code># grub-mkconfig -o /boot/grub/grub.cfg
+</code></pre>
+
+<p>Afterwards, reboot, and enjoy.</p>
+
+<h2>Compiling the kernel</h2>
+
+<p>Of course, it's possible to compile the kernel yourself, either because
+you'd like to use the <code>.config</code> file as a base for a minimal kernel tailored
+to your own computer, or because you need to
+<a href="https://wiki.gentoo.org/wiki/Signed_kernel_module_support#Manually_signing_modules">sign out-of-tree modules</a>
+yourself.</p>
+
+<p>This kernel ebuild will fetch <code>gentoo-sources</code> as a dependency, and will
+copy Ragnarok's
+<a href="https://raw.githubusercontent.com/RagnarokOS/kernel-build/refs/heads/master/ragnarok.config">config file</a>
+to the kernel source directory in <code>/usr/src</code>, which makes the process
+a bit more convenient.</p>
+
+<p>If you choose to compile a minimal kernel based on Ragnarok's config and
+encounter any issue, be sure to mention it when opening a bug report, and
+paste the content of your <code>.config</code> file along with it. More importantly,
+I cannot offer support for minimal kernel configs which the disables default
+hardening options, for obvious reasons.</p>
+
+<h2>Compiling Steps</h2>
+
+<p>As with any kernel update, be sure to run:</p>
+
+<pre><code># eselect kernel list
+# eselect kernel set num
+</code></pre>
+
+<p>Replace <code>num</code> with the latest version.</p>
+
+<p>Edit <code>EXTRAVERSION</code> inside the <code>Makefile</code></p>
+
+<pre><code># sed -i -e '/EXTRAVERSION = -gentoo/c\EXTRAVERSION = -ragnarok-custom' Makefile
+</code></pre>
+
+<p>Next, <code>cd</code> into <code>/usr/src/linux</code>, then:</p>
+
+<pre><code># make CC=clang LLVM=1 nconfig
+</code></pre>
+
+<p>Make your changes and save the config. You now have two choices:</p>
+
+<ol>
+<li>Create a tarball to install this kernel on multiple machines.</li>
+<li>Install only on the same computer you built the kernel on.</li>
+</ol>
+
+<p>If you choose option 1, run:</p>
+
+<pre><code># make CC=clang LLVM=1 -j# dir-pkg
+# cd tar-install
+# tar czvf ../linux-VERSION-ragnarok-custom.tgz \
+    --exclude=build/ --owner=root --sort=name *
+# cd ..
+</code></pre>
+
+<p>Replace <code>-j#</code> with the desired number of CPUs to use (or <code>$(nproc)</code>),
+and <code>VERSION</code> with the kernel version (eg 6.12.31).</p>
+
+<p>Installing the kernel then merely requires you to copy the contents of
+<code>boot</code> to <code>/boot/</code> and <code>lib/modules</code> to <code>/usr/lib/modules/</code>.</p>
+
+<p>If you choose option 2:</p>
+
+<pre><code># make CC=clang LLVM=1 -j#
+# make modules_install
+</code></pre>
+
+<p>Then copy <code>config-*.*.*-ragnarok-custom</code>, <code>System.map-*.*.*-ragnarok-custom</code>
+and <code>vmlinuz-*.*.*-ragnarok-custom</code> to <code>/boot</code>.</p>
+
+<p>No matter which route you took, remember to generate an initramfs and update
+your bootloader config.</p>
+		</div>
+
+		<div class="footer">
+			&copy; 2023-2025 Ian LeCorbeau
+		</div>
+	</body>
+</html>
