@@ -86,11 +86,6 @@ any other method will also work.</p>
 
 <p>Place it in <code>/usr/share/openpgp-keys/</code>.</p>
 
-<p>Note: every once in a while, you may want to sync the repository and run
-<code>emerge -av sec-keys/ragnarok-keys</code>. This ebuild will provide Ragnarok's
-public signify and pgp keys. If emerge fails, it simply means that the
-ebuild isn't ready yet.</p>
-
 <h2>Add Ragnarok's ebuild Repo</h2>
 
 <p>Add Ragnarok's ebuild repository to <code>/etc/portage/repos.conf/eselect-repo.conf</code>:</p>
@@ -115,6 +110,15 @@ sync-openpgp-key-refresh = false
 <p>Note: when syncing the repo, you will get a warning related to <code>key-refresh</code>
 being set to false in <code>eselect-repo.conf</code>. I cannot set up WKD yet, and
 considering that I prefer Signify, I'm not sold on using WKD so far.</p>
+
+<p>Afterwards, emerge the <code>ragnarok-keys</code> package, which will ensure that
+new pgp/signify keys get updated and old ones removed:</p>
+
+<pre><code># emerge -av sec-keys/ragnarok-keys
+</code></pre>
+
+<p><i>Portage will warn you that the key you copied in the earlier step
+will be overwritten, you may safely ignore the warning.</i></p>
 
 <h2>Install</h2>
 
